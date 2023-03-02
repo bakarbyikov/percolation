@@ -6,6 +6,7 @@ from secrets import token_hex
 from time import perf_counter
 from typing import Iterable, List, Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 SIZE = WIDTH, HEIGHT = 40, 40
@@ -35,10 +36,11 @@ class Link:
         self.color = 'black' if cluster is None else self.cluster.color
 
 class Node:
-    def __init__(self, x: int, y: int, r: int=POINT_RADIUS) -> None:
+    def __init__(self, x: int, y: int, cluster: Cluster, r: int=POINT_RADIUS) -> None:
         self.coords = (x, y)
         self.r = r
-        self.color = 'black'
+        self.cluster = cluster
+        self.color = 'black' if cluster is None else self.cluster.color
         
 class Grid:
 
@@ -48,9 +50,9 @@ class Grid:
     
     def update(self, prob: float=PROBABILITY) -> None:
         self.horizontal_links = np.random.rand(self.width, self.height) < prob
-        self.horizontal_links[:, 0] = False
+        self.horizontal_links[-1, :] = False
         self.vertical_links = np.random.rand(self.width, self.height) < prob
-        self.vertical_links[0, :] = False
+        self.vertical_links[:, -1] = False
 
         self.clusters = np.empty(self.size, Cluster)
         self.clusters_list = []
@@ -67,16 +69,17 @@ class Grid:
 
     def nodes_list(self) -> List[Node]:
         points = []
-        for x, y in product(range(self.width+1), range(self.height+1)):
-            points.append(Node(x, y))
+        for x, y in product(range(self.width), range(self.height)):
+            cluster = self.clusters[x, y]
+            points.append(Node(x, y, cluster))
         return points
     
     def is_leaks(self) -> bool:
         if len(self.clusters_list) <= 0:
             on_borders = product((0, self.width-1), range(self.height))
             self.find_clusters(set(on_borders))
-        clusters_left = self.clusters[0, :][self.horizontal_links[0, :]]
-        clusters_right = self.clusters[-1, :][self.horizontal_links[-1, :]]
+        clusters_left = self.clusters[0, :]
+        clusters_right = self.clusters[-1, :]
         leak = np.intersect1d(clusters_left, clusters_right)
         return leak.size > 0
     
@@ -97,8 +100,6 @@ class Grid:
                 if node not in visited:
                     visited.add(node)
                     backtrack.append(node)
-            # connected.difference_update(visited)
-            # backtrack.extend(connected)
         return backtrack
     
     def find_clusters(self, where: set=None):
@@ -141,8 +142,8 @@ class Painter:
         self.grid.find_clusters()
     
     def update_canvas_size(self) -> None:
-        width = self.grid.width * LINE_LENGHT + PADDING*2
-        height = self.grid.height * LINE_LENGHT + PADDING*2
+        width = (self.grid.width-1) * LINE_LENGHT + PADDING*2
+        height = (self.grid.height-1) * LINE_LENGHT + PADDING*2
         self.canvas.config(width=width, height=height)
     
     def on_left_mouse(self, *args) -> None:
@@ -195,8 +196,8 @@ def do_experiment(grid: Grid, prob: float, times: int=10**3) -> float:
         n_leaks += grid.is_leaks()
     return n_leaks / times
 
-def do_graph(num: int=21):
-    grid = Grid(*SIZE)
+def do_graph(num: int=31, size: Tuple[int, int]=(10, 10)):
+    grid = Grid(*size)
     x = np.linspace(0, 1, num)
     y = list()
     total_time = 0
@@ -208,9 +209,10 @@ def do_graph(num: int=21):
         y.append(leak_percent)
         print(f"{probability = :0.2f}, {leak_percent = }, {elapsed = }")
     print(f"{total_time = }")
+    plt.plot(x, y)
+    plt.show()
     
 
 if __name__ == "__main__":
-    # do_graph()
-        
+    do_graph()
     Painter().mainloop()
