@@ -35,16 +35,32 @@ class Grid:
 
     def __init__(self, width: int=WIDTH, height: int=HEIGHT) -> None:
         self.size = self.width, self.height = width, height
-        self.update()
+
+        self.horizontal_links = np.zeros(self.size, bool)
+        self.vertical_links = np.zeros(self.size, bool)
+
+        self.clusters = np.empty(self.size, Cluster)
+        self.clusters_list = list()
+
+        self.flood()
     
-    def update(self, prob: float=PROBABILITY) -> None:
+    def flood(self, prob: float=PROBABILITY) -> None:
         self.horizontal_links = np.random.rand(self.width, self.height) < prob
         self.horizontal_links[-1, :] = False
         self.vertical_links = np.random.rand(self.width, self.height) < prob
         self.vertical_links[:, -1] = False
 
-        self.clusters = np.empty(self.size, Cluster)
-        self.clusters_list = []
+    def forget_clusters(self) -> None:
+        self.clusters.fill(None)
+        self.clusters_list.clear()
+    
+    def update(self, prob: float=PROBABILITY) -> None:
+        self.flood(prob)
+        self.forget_clusters()
+    
+    def change_size(self, width: int, height: int) -> None:
+        self.size = self.width, self.height = width, height
+        self.update()
     
     def links_list(self) -> List[Link]:
         lines = []
@@ -93,6 +109,7 @@ class Grid:
     
     def find_clusters(self, where: set=None):
         if where is None:
+            self.forget_clusters()
             to_visit = set(product(range(self.width), range(self.height)))
         else:
             to_visit = where
@@ -109,14 +126,18 @@ class Grid:
 if __name__ == '__main__':
     w, h = 10, 5
     grid = Grid(w, h)
-    grid.update()
     print(f"{grid.is_leaks() = }")
     grid.find_clusters()
     table = [[0]*w for _ in range(h)]
     for point in grid.nodes_list():
         x, y = point.coords
-        table[y][x] = grid.clusters[x, y].name
+        c = grid.clusters[x, y]
+        table[y][x] = '-' if c is None else c.name
     
     for row in table:
         print('\t'.join(map(str, row)))
+    
+    print("Clusters: ")
+    for c in grid.clusters_list:
+        print(f"{c.name = } {c.nodes = }")
 
