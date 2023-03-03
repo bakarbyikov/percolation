@@ -2,6 +2,7 @@ import tkinter as tk
 
 from grid import Grid
 from painter import Painter
+from settings import *
 
 
 class Instruments(tk.Frame):
@@ -12,13 +13,13 @@ class Instruments(tk.Frame):
         self.painter = painter
         self.grid = grid
 
-        self.width_scale = tk.Scale(self, from_=10, to=100, 
+        self.width_scale = tk.Scale(self, from_=MIN_GRID, to=MAX_GRID, 
                                       orient=tk.HORIZONTAL,
                                       label='Grid width')
         self.width_scale.set(self.grid.width)
         self.width_scale.bind("<ButtonRelease-1>", self.update_width)
 
-        self.height_scale = tk.Scale(self, from_=10, to=100, 
+        self.height_scale = tk.Scale(self, from_=MIN_GRID, to=MAX_GRID, 
                                       orient=tk.HORIZONTAL,
                                       label='Grid height')
         self.height_scale.set(self.grid.height)

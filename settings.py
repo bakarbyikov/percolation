@@ -2,6 +2,10 @@
 SIZE = WIDTH, HEIGHT = 40, 40
 PROBABILITY = 0.5
 
+#Instruments settings
+MIN_GRID = 1
+MAX_GRID = 300
+
 #Canvas draw settings
 PADDING = 10
 LINE_LENGHT = 20
