@@ -1,5 +1,6 @@
 from itertools import product
 from secrets import token_hex
+from time import perf_counter
 from typing import Iterable, List, Tuple
 
 import numpy as np
@@ -33,8 +34,9 @@ class Node:
         
 class Grid:
 
-    def __init__(self, width: int=WIDTH, height: int=HEIGHT) -> None:
+    def __init__(self, width: int=WIDTH, height: int=HEIGHT, prob: float=PROBABILITY) -> None:
         self.size = self.width, self.height = width, height
+        self.prob = prob
 
         self.horizontal_links = np.zeros(self.size, bool)
         self.vertical_links = np.zeros(self.size, bool)
@@ -44,23 +46,27 @@ class Grid:
 
         self.flood()
     
-    def flood(self, prob: float=PROBABILITY) -> None:
-        self.horizontal_links = np.random.rand(self.width, self.height) < prob
+    def flood(self) -> None:
+        self.horizontal_links = np.random.rand(self.width, self.height) < self.prob
         self.horizontal_links[-1, :] = False
-        self.vertical_links = np.random.rand(self.width, self.height) < prob
+        self.vertical_links = np.random.rand(self.width, self.height) < self.prob
         self.vertical_links[:, -1] = False
 
     def forget_clusters(self) -> None:
-        self.clusters.fill(None)
+        self.clusters = np.empty(self.size, Cluster)
         self.clusters_list.clear()
     
-    def update(self, prob: float=PROBABILITY) -> None:
-        self.flood(prob)
+    def update(self) -> None:
+        self.flood()
         self.forget_clusters()
     
     def change_size(self, width: int, height: int) -> None:
         self.size = self.width, self.height = width, height
         self.update()
+    
+    def change_probability(self, prob: float) -> None:
+        self.prob = prob
+        self.update
     
     def links_list(self) -> List[Link]:
         lines = []
@@ -124,20 +130,24 @@ class Grid:
 
 
 if __name__ == '__main__':
-    w, h = 10, 5
+    w, h = 500, 500
+    then = perf_counter()
     grid = Grid(w, h)
     print(f"{grid.is_leaks() = }")
     grid.find_clusters()
-    table = [[0]*w for _ in range(h)]
-    for point in grid.nodes_list():
-        x, y = point.coords
-        c = grid.clusters[x, y]
-        table[y][x] = '-' if c is None else c.name
+    print(f"{len(grid.clusters_list)}")
+    elapsed = perf_counter() - then
+    print(f"{elapsed = }")
+    # table = [[0]*w for _ in range(h)]
+    # for point in grid.nodes_list():
+    #     x, y = point.coords
+    #     c = grid.clusters[x, y]
+    #     table[y][x] = '-' if c is None else c.name
     
-    for row in table:
-        print('\t'.join(map(str, row)))
+    # for row in table:
+    #     print('\t'.join(map(str, row)))
     
-    print("Clusters: ")
-    for c in grid.clusters_list:
-        print(f"{c.name = } {c.nodes = }")
+    # print("Clusters: ")
+    # for c in grid.clusters_list:
+    #     print(f"{c.name = } {c.nodes = }")
 

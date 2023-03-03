@@ -1,3 +1,4 @@
+from time import perf_counter
 import tkinter as tk
 from random import choices
 
@@ -12,9 +13,14 @@ class Painter(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.parent = parent
         self.grid = grid
+
+        self.line_lenght = LINE_LENGHT
+        self.line_width = LINE_WIDTH
+        self.padding = PADDING
+        self.point_radius = POINT_RADIUS
         
         self.canvas = tk.Canvas(self)
-        self.canvas.pack(expand=1, anchor=tk.W)
+        self.canvas.pack()
         self.update_canvas_size()
         self.draw()
         
@@ -23,8 +29,8 @@ class Painter(tk.Frame):
         self.canvas.bind('<Button-3>', self.on_right_mouse)
     
     def update_canvas_size(self) -> None:
-        width = (self.grid.width-1) * LINE_LENGHT + PADDING*2
-        height = (self.grid.height-1) * LINE_LENGHT + PADDING*2
+        width = (self.grid.width-1) * self.line_lenght + self.padding*2
+        height = (self.grid.height-1) * self.line_lenght + self.padding*2
         self.canvas.config(width=width, height=height)
 
     def on_left_mouse(self, *args) -> None:
@@ -34,13 +40,29 @@ class Painter(tk.Frame):
         self.update()
 
     def on_middle_mouse(self, *args) -> None:
+        then = perf_counter()
         self.grid.find_clusters()
+        cluster_finding_time = perf_counter() - then
+        print(f"{cluster_finding_time = }")
+        then = perf_counter()
         self.update()
+        drawing_time = perf_counter() - then
+        print(f"{drawing_time = }")
     
     def on_right_mouse(self, *args) -> None:
+        then = perf_counter()
+
         self.grid.update()
         self.grid.find_clusters()
+
+        cluster_finding_time = perf_counter() - then
+        print(f"{cluster_finding_time = }")
+        then = perf_counter()
+
         self.update()
+
+        drawing_time = perf_counter() - then
+        print(f"{drawing_time = }")
     
     def update(self) -> None:
         self.canvas.delete("all")
@@ -48,17 +70,17 @@ class Painter(tk.Frame):
 
     def draw_point(self, point: Node) -> None:
         coords = np.array(point.coords)
-        coords *= LINE_LENGHT
-        coords += PADDING
+        coords *= self.line_lenght
+        coords += self.padding
         x, y = coords
-        r = POINT_RADIUS
+        r = self.point_radius
         self.canvas.create_oval(x-r, y-r, x+r, y+r, fill=point.color)
 
     def draw_line(self, line: Link) -> None:
         coords = np.array(line.coords)
-        coords *= LINE_LENGHT
-        coords += PADDING
-        self.canvas.create_line(*coords, width=LINE_WIDTH, fill=line.color)
+        coords *= self.line_lenght
+        coords += self.padding
+        self.canvas.create_line(*coords, width=self.line_width, fill=line.color)
     
     def draw(self):
         for point in self.grid.nodes_list():

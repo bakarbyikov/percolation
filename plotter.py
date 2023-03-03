@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from grid import Grid
-from settings import *
 
 def do_experiment(grid: Grid, prob: float, times: int=10**3) -> float:
     n_leaks = 0

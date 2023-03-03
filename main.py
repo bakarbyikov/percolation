@@ -16,8 +16,8 @@ class App(tk.Frame):
         self.painter = Painter(self, self.grid)
         self.instruments = Instruments(self, self.painter, self.grid)
 
-        self.painter.pack(side="left")
-        self.instruments.pack(side="right")
+        self.painter.pack(side=tk.LEFT)
+        self.instruments.pack(side=tk.RIGHT, fill='y')
         
 
 if __name__ == "__main__":
