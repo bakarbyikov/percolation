@@ -43,7 +43,7 @@ class Instruments(tk.Frame):
         
         self.point_radius = tk.Scale(self, from_=0, to=10, 
                                      orient=tk.HORIZONTAL,
-                                     label='Line width')
+                                     label='Point radius')
         self.point_radius.set(self.painter.point_radius)
         self.point_radius.bind("<ButtonRelease-1>", self.update_point_radius)
         self.point_radius.pack()
