@@ -19,7 +19,7 @@ class Painter(tk.Frame):
         self.padding = PADDING
         self.point_radius = POINT_RADIUS
         
-        self.canvas = tk.Canvas(self)
+        self.canvas = tk.Canvas(self, bg='black')
         self.canvas.pack()
         self.update_canvas_size()
         self.draw()
@@ -29,9 +29,10 @@ class Painter(tk.Frame):
         self.canvas.bind('<Button-3>', self.on_right_mouse)
     
     def update_canvas_size(self) -> None:
-        width = (self.grid.width-1) * self.line_lenght + self.padding*2
-        height = (self.grid.height-1) * self.line_lenght + self.padding*2
-        self.canvas.config(width=width, height=height)
+        self.offset = self.padding + max(self.line_width, self.point_radius)
+        self.width = (self.grid.width-1) * self.line_lenght + self.offset*2
+        self.height = (self.grid.height-1) * self.line_lenght + self.offset*2
+        self.canvas.config(width=self.width, height=self.height)
 
     def on_left_mouse(self, *args) -> None:
         size = choices(range(10, 40), k=2)
@@ -71,15 +72,15 @@ class Painter(tk.Frame):
     def draw_point(self, point: Node) -> None:
         coords = np.array(point.coords)
         coords *= self.line_lenght
-        coords += self.padding
+        coords += self.offset
         x, y = coords
         r = self.point_radius
-        self.canvas.create_oval(x-r, y-r, x+r, y+r, fill=point.color)
+        self.canvas.create_oval(x-r, y-r, x+r, y+r, fill=point.color, outline=point.color)
 
     def draw_line(self, line: Link) -> None:
         coords = np.array(line.coords)
         coords *= self.line_lenght
-        coords += self.padding
+        coords += self.offset
         self.canvas.create_line(*coords, width=self.line_width, fill=line.color)
     
     def draw(self):
