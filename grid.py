@@ -24,13 +24,13 @@ class Link:
     def __init__(self, x1: int, y1: int, x2: int, y2: int, cluster: Cluster) -> None:
         self.coords = (x1, y1, x2, y2)
         self.cluster = cluster
-        self.color = 'black' if cluster is None else self.cluster.color
+        self.color = 'white' if cluster is None else self.cluster.color
 
 class Node:
     def __init__(self, x: int, y: int, cluster: Cluster) -> None:
         self.coords = (x, y)
         self.cluster = cluster
-        self.color = 'black' if cluster is None else self.cluster.color
+        self.color = 'white' if cluster is None else self.cluster.color
         
 class Grid:
 
