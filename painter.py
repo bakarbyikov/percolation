@@ -65,7 +65,9 @@ class Painter(tk.Frame):
         drawing_time = perf_counter() - then
         print(f"{drawing_time = }")
     
-    def update(self) -> None:
+    def update(self, size_change: bool=True) -> None:
+        if size_change:
+            self.update_canvas_size()
         self.canvas.delete("all")
         self.draw()
 
