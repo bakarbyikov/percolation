@@ -78,10 +78,12 @@ class Painter(tk.Frame):
         self.canvas.create_line(*coords, width=self.line_width, fill=line.color)
     
     def draw(self):
-        for point in self.grid.nodes_list():
-            self.draw_point(point)
-        for line in self.grid.links_list():
-            self.draw_line(line)
+        if self.point_radius:
+            for point in self.grid.nodes_list():
+                self.draw_point(point)
+        if self.line_width:
+            for line in self.grid.links_list():
+                self.draw_line(line)
 
 
 if __name__ == '__main__':
