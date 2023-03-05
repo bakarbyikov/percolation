@@ -21,8 +21,7 @@ class Painter(tk.Frame):
         
         self.canvas = tk.Canvas(self, bg='black')
         self.canvas.pack()
-        self.update_canvas_size()
-        self.draw()
+        self.update()
         
         self.canvas.bind('<Button-1>', self.on_left_mouse)
         self.canvas.bind('<Button-2>', self.on_middle_mouse)
@@ -34,39 +33,21 @@ class Painter(tk.Frame):
         self.height = (self.grid.height-1) * self.line_lenght + self.offset*2
         self.canvas.config(width=self.width, height=self.height)
 
-    def on_left_mouse(self, *args) -> None:
+    def on_middle_mouse(self, *_) -> None:
         size = choices(range(10, 40), k=2)
-        self.grid.change_size(*size)
-        self.update_canvas_size()
+        self.grid.change_size(*size, find_clusters=True)
         self.update()
 
-    def on_middle_mouse(self, *args) -> None:
-        then = perf_counter()
+    def on_right_mouse(self, *_) -> None:
         self.grid.find_clusters()
-        cluster_finding_time = perf_counter() - then
-        print(f"{cluster_finding_time = }")
-        then = perf_counter()
-        self.update()
-        drawing_time = perf_counter() - then
-        print(f"{drawing_time = }")
+        self.update(size_changed=False)
     
-    def on_right_mouse(self, *args) -> None:
-        then = perf_counter()
-
-        self.grid.update()
-        self.grid.find_clusters()
-
-        cluster_finding_time = perf_counter() - then
-        print(f"{cluster_finding_time = }")
-        then = perf_counter()
-
-        self.update()
-
-        drawing_time = perf_counter() - then
-        print(f"{drawing_time = }")
+    def on_left_mouse(self, *_) -> None:
+        self.grid.update(True)
+        self.update(size_changed=False)
     
-    def update(self, size_change: bool=True) -> None:
-        if size_change:
+    def update(self, size_changed: bool=True) -> None:
+        if size_changed:
             self.update_canvas_size()
         self.canvas.delete("all")
         self.draw()
