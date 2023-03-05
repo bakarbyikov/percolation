@@ -75,7 +75,7 @@ class Painter(tk.Frame):
         coords += self.offset
         x, y = coords
         r = self.point_radius
-        self.canvas.create_oval(x-r, y-r, x+r, y+r, fill=point.color, outline=point.color)
+        self.canvas.create_oval(x-r, y-r, x+r-1, y+r-1, fill=point.color, outline='')
 
     def draw_line(self, line: Link) -> None:
         coords = np.array(line.coords)
