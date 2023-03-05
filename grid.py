@@ -1,6 +1,5 @@
 from itertools import product
 from secrets import token_hex
-from time import perf_counter
 from typing import Iterable, List, Tuple
 
 import numpy as np
@@ -35,9 +34,11 @@ class Node:
         
 class Grid:
 
-    def __init__(self, width: int=WIDTH, height: int=HEIGHT, prob: float=PROBABILITY) -> None:
+    def __init__(self, width: int=WIDTH, height: int=HEIGHT, 
+                 prob: float=PROBABILITY, find_all_clusters=True) -> None:
         self.size = self.width, self.height = width, height
         self.prob = prob
+        self.find_all_clusters = find_all_clusters
 
         self.horizontal_links = np.zeros(self.size, bool)
         self.vertical_links = np.zeros(self.size, bool)
@@ -58,19 +59,23 @@ class Grid:
         self.clusters_list.clear()
     
     @print_elapsed_time
-    def update(self, find_clusters: bool=False) -> None:
+    def update(self) -> None:
         self.flood()
         self.forget_clusters()
-        if find_clusters:
+        if self.find_all_clusters:
             self.find_clusters()
     
-    def change_size(self, width: int, height: int, find_clusters: bool=False) -> None:
-        self.size = self.width, self.height = width, height
-        self.update(find_clusters)
+    def change_size(self, width: int=None, height: int=None) -> None:
+        if width is not None:
+            self.width = width
+        if height is not None:
+            self.height = height
+        self.size = self.width, self.height
+        self.update()
     
-    def change_probability(self, prob: float, find_clusters: bool=False) -> None:
+    def change_probability(self, prob: float) -> None:
         self.prob = prob
-        self.update(find_clusters)
+        self.update()
     
     def links_list(self) -> List[Link]:
         lines = []
@@ -137,14 +142,15 @@ class Grid:
 
 if __name__ == '__main__':
     w, h = 500, 500
-    grid = Grid(w, h)
+    grid = Grid(w, h, find_all_clusters=False)
 
-    print(f"Just update")
+    print(f"Update without cluster finding")
     grid.update()
     print()
 
     print(f"Update and find cluster")
-    grid.update(find_clusters=True)
+    grid.update()
+    grid.find_clusters()
     print()
     
     print(f"Update and check leackage")

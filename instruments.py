@@ -1,83 +1,83 @@
 import tkinter as tk
+from typing import Callable
 
-from grid import Grid
 from painter import Painter
 from settings import *
 
+class Property_scale(tk.Frame):
+
+    def __init__(self, parent, name: str, callback: Callable, 
+                 value: int, to: int, from_: int=0,
+                 out_float: bool=False):
+        super().__init__(parent)
+        self.callback = callback
+        self.out_float = out_float
+        self.scale = tk.Scale(self, from_=from_, to=to,
+                              orient=tk.HORIZONTAL,
+                              label=name)
+        if self.out_float:
+            self.scale.config(resolution=PROBABILITY_STEP)
+        self.scale.set(value)
+        self.scale.bind("<ButtonRelease-1>", self.do_callback)
+        self.scale.pack()
+    
+    def do_callback(self, *_) -> None:
+        if self.out_float:
+            value = float(self.scale.get())
+        else:
+            value = int(self.scale.get())
+        self.callback(value)
 
 class Instruments(tk.Frame):
 
-    def __init__(self, parent: tk.Frame, painter: Painter, grid: Grid) -> None:
+    def __init__(self, parent: tk.Frame, painter: Painter) -> None:
         tk.Frame.__init__(self, parent)
         self.parent = parent
         self.painter = painter
-        self.grid = grid
 
-        self.width_scale = tk.Scale(self, from_=MIN_GRID, to=MAX_GRID, 
-                                      orient=tk.HORIZONTAL,
-                                      label='Grid width')
-        self.width_scale.set(self.grid.width)
-        self.width_scale.bind("<ButtonRelease-1>", self.update_width)
-        self.width_scale.pack()
-
-        self.height_scale = tk.Scale(self, from_=MIN_GRID, to=MAX_GRID, 
-                                      orient=tk.HORIZONTAL,
-                                      label='Grid height')
-        self.height_scale.set(self.grid.height)
-        self.height_scale.bind("<ButtonRelease-1>", self.update_height)
-        self.height_scale.pack()
-
-        self.line_lenght = tk.Scale(self, from_=0, to=20, 
-                                    orient=tk.HORIZONTAL,
-                                    label='Line lenght')
-        self.line_lenght.set(self.painter.line_lenght)
-        self.line_lenght.bind("<ButtonRelease-1>", self.update_line_lienght)
-        self.line_lenght.pack()
+        Property_scale(self, 'Grid width', self.update_width,
+                       self.painter.grid.width, MAX_GRID).pack()
+        Property_scale(self, 'Grid height', self.update_height,
+                       self.painter.grid.height, MAX_GRID).pack()
         
-        self.line_width = tk.Scale(self, from_=0, to=10, 
-                                   orient=tk.HORIZONTAL,
-                                   label='Line width')
-        self.line_width.set(self.painter.line_width)
-        self.line_width.bind("<ButtonRelease-1>", self.update_line_width)
-        self.line_width.pack()
+        Property_scale(self, 'Probability', self.update_probability,
+                       self.painter.grid.prob, 1, out_float=True).pack()
         
-        self.point_radius = tk.Scale(self, from_=0, to=10, 
-                                     orient=tk.HORIZONTAL,
-                                     label='Point radius')
-        self.point_radius.set(self.painter.point_radius)
-        self.point_radius.bind("<ButtonRelease-1>", self.update_point_radius)
-        self.point_radius.pack()
+        Property_scale(self, 'Line lenght', self.update_line_lenght,
+                       self.painter.line_lenght, MAX_LINE_LENGHT).pack()
+        Property_scale(self, 'Line width', self.update_line_width,
+                       self.painter.line_width, MAX_LINE_WIDTH).pack()
+        Property_scale(self, 'Point radius', self.update_point_radius,
+                       self.painter.point_radius, MAX_POINT_RADIUS).pack()
 
-        self.update_button = tk.Button(self, text="Update grid", command=self.update_grid)
-        self.update_button.pack(side=tk.BOTTOM)
+        tk.Button(self, text="Update grid", command=self.update_grid).pack(side=tk.BOTTOM)
     
-    def update_point_radius(self, *_) -> None:
-        self.painter.point_radius = self.point_radius.get()
-        self.painter.update_canvas_size()
+    def update_width(self, new_value: int) -> None:
+        self.painter.change_grid_size(new_value, None)
+    def update_height(self, new_value: int) -> None:
+        self.painter.change_grid_size(None, new_value)
+        
+    def update_probability(self, new_value: int) -> None:
+        self.painter.change_grid_probability(new_value)
+
+    def update_line_lenght(self, new_value: int) -> None:
+        self.painter.line_lenght = new_value
         self.painter.update()
-    def update_line_width(self, *_) -> None:
-        self.painter.line_width = self.line_width.get()
-        self.painter.update_canvas_size()
+    def update_line_width(self, new_value: int) -> None:
+        self.painter.line_width = new_value
         self.painter.update()
-    def update_line_lienght(self, *_) -> None:
-        self.painter.line_lenght = self.line_lenght.get()
-        self.painter.update_canvas_size()
+    def update_point_radius(self, new_value: int) -> None:
+        self.painter.point_radius = new_value
         self.painter.update()
-    def update_width(self, event) -> None:
-        width = self.width_scale.get()
-        height = self.grid.height
-        self.update_grid_size(width, height)
-    def update_height(self, event) -> None:
-        width = self.grid.width
-        height = self.height_scale.get()
-        self.update_grid_size(width, height)
-    
-    def update_grid_size(self, width: int, height: int) -> None:
-        self.grid.change_size(width, height)
-        self.painter.update_canvas_size()
-        self.painter.update()
-    
+
     def update_grid(self):
-        self.grid.update()
+        self.painter.grid.update()
         self.painter.update()
-        pass
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    p = Painter(root)
+    i = Instruments(root, p)
+    p.pack(side=tk.LEFT)
+    i.pack(side=tk.LEFT)
+    root.mainloop()
