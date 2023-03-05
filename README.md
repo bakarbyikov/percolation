@@ -4,4 +4,4 @@ Dependencies:
 - matplotlib
 
 
-![изображение](https://user-images.githubusercontent.com/71838879/222414720-38473e66-1c44-42db-ab6b-8af559d62f71.png)
+![изображение](https://user-images.githubusercontent.com/71838879/222982543-e59c18c1-6d87-425a-8f1b-91cc3534bc2c.png)
