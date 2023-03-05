@@ -1,3 +1,6 @@
+#Debug output
+PRINT_ELAPSED_TIME = False
+
 #Grid default settings
 SIZE = WIDTH, HEIGHT = 40, 40
 PROBABILITY = 0.5

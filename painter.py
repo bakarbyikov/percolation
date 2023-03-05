@@ -1,11 +1,12 @@
-from time import perf_counter
 import tkinter as tk
 from random import choices
 
 import numpy as np
 
 from grid import Grid, Link, Node
+from misc import print_elapsed_time
 from settings import *
+
 
 class Painter(tk.Frame):
 
@@ -46,6 +47,7 @@ class Painter(tk.Frame):
         self.grid.update(True)
         self.update(size_changed=False)
     
+    @print_elapsed_time
     def update(self, size_changed: bool=True) -> None:
         if size_changed:
             self.update_canvas_size()
@@ -71,6 +73,10 @@ class Painter(tk.Frame):
             self.draw_point(point)
         for line in self.grid.links_list():
             self.draw_line(line)
-    
-    def mainloop(self):
-        self.parent.mainloop()
+
+
+if __name__ == '__main__':
+    root = tk.Tk()
+    painter = Painter(root, Grid())
+    painter.pack()
+    root.mainloop()

@@ -5,6 +5,7 @@ from typing import Iterable, List, Tuple
 
 import numpy as np
 
+from misc import print_elapsed_time
 from settings import *
 
 
@@ -56,13 +57,12 @@ class Grid:
         self.clusters = np.empty(self.size, Cluster)
         self.clusters_list.clear()
     
+    @print_elapsed_time
     def update(self, find_clusters: bool=False) -> None:
-        then = perf_counter()
         self.flood()
         self.forget_clusters()
         if find_clusters:
             self.find_clusters()
-        print(f"Grid updating time = {perf_counter()-then}")
     
     def change_size(self, width: int, height: int, find_clusters: bool=False) -> None:
         self.size = self.width, self.height = width, height
@@ -89,6 +89,7 @@ class Grid:
             points.append(Node(x, y, cluster))
         return points
     
+    @print_elapsed_time
     def is_leaks(self) -> bool:
         if len(self.clusters_list) <= 0:
             on_borders = product((0, self.width-1), range(self.height))
@@ -117,6 +118,7 @@ class Grid:
                     backtrack.append(node)
         return backtrack
     
+    @print_elapsed_time
     def find_clusters(self, where: set=None):
         if where is None:
             self.forget_clusters()
@@ -135,23 +137,17 @@ class Grid:
 
 if __name__ == '__main__':
     w, h = 500, 500
-    then = perf_counter()
     grid = Grid(w, h)
-    print(f"{grid.is_leaks() = }")
-    grid.find_clusters()
-    print(f"{len(grid.clusters_list)}")
-    elapsed = perf_counter() - then
-    print(f"{elapsed = }")
-    # table = [[0]*w for _ in range(h)]
-    # for point in grid.nodes_list():
-    #     x, y = point.coords
-    #     c = grid.clusters[x, y]
-    #     table[y][x] = '-' if c is None else c.name
-    
-    # for row in table:
-    #     print('\t'.join(map(str, row)))
-    
-    # print("Clusters: ")
-    # for c in grid.clusters_list:
-    #     print(f"{c.name = } {c.nodes = }")
 
+    print(f"Just update")
+    grid.update()
+    print()
+
+    print(f"Update and find cluster")
+    grid.update(find_clusters=True)
+    print()
+    
+    print(f"Update and check leackage")
+    grid.update()
+    grid.is_leaks()
+    print()
