@@ -6,10 +6,10 @@ import numpy as np
 
 from grid import Grid
 
-def do_experiment(grid: Grid, prob: float, times: int=10**3) -> float:
+def do_experiment(grid: Grid, times: int=10**3) -> float:
     n_leaks = 0
     for _ in range(times):
-        grid.update(prob)
+        grid.update()
         n_leaks += grid.is_leaks()
     return n_leaks / times
 
@@ -19,8 +19,9 @@ def do_graph(num: int=31, size: Tuple[int, int]=(10, 10)):
     y = list()
     total_time = 0
     for probability in x:
+        grid.change_probability(probability)
         then = perf_counter()
-        leak_percent = do_experiment(grid, probability)
+        leak_percent = do_experiment(grid)
         elapsed = perf_counter() - then
         total_time += elapsed
         y.append(leak_percent)
