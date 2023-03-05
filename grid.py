@@ -56,17 +56,21 @@ class Grid:
         self.clusters = np.empty(self.size, Cluster)
         self.clusters_list.clear()
     
-    def update(self) -> None:
+    def update(self, find_clusters: bool=False) -> None:
+        then = perf_counter()
         self.flood()
         self.forget_clusters()
+        if find_clusters:
+            self.find_clusters()
+        print(f"Grid updating time = {perf_counter()-then}")
     
-    def change_size(self, width: int, height: int) -> None:
+    def change_size(self, width: int, height: int, find_clusters: bool=False) -> None:
         self.size = self.width, self.height = width, height
-        self.update()
+        self.update(find_clusters)
     
-    def change_probability(self, prob: float) -> None:
+    def change_probability(self, prob: float, find_clusters: bool=False) -> None:
         self.prob = prob
-        self.update
+        self.update(find_clusters)
     
     def links_list(self) -> List[Link]:
         lines = []
