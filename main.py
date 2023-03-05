@@ -11,14 +11,16 @@ class App(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
 
-        self.painter = Painter(self)
-        self.instruments = Instruments(self, self.painter)
+        painter_window = tk.Toplevel(self)
+        painter_window.protocol("WM_DELETE_WINDOW", root.destroy)
+        self.painter = Painter(painter_window)
+        self.painter.pack()
 
-        self.painter.pack(side=tk.LEFT)
-        self.instruments.pack(side=tk.RIGHT, fill='y')
-        
+        self.instruments = Instruments(self, self.painter)
+        self.instruments.pack()
 
 if __name__ == "__main__":
     root = tk.Tk()
+    root.title("Percolation")
     App(root).pack(side="top", fill="both", expand=True)
     root.mainloop()
