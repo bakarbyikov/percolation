@@ -46,7 +46,7 @@ class Grid:
         self.clusters = np.empty(self.size, Cluster)
         self.clusters_list = list()
 
-        self.flood()
+        self.update()
     
     def flood(self) -> None:
         self.horizontal_links = np.random.rand(self.width, self.height) < self.prob
