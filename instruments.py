@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from typing import Callable
 
 from painter import Painter
@@ -12,22 +13,55 @@ class Property_scale(tk.Frame):
         super().__init__(parent)
         self.callback = callback
         self.out_float = out_float
-        self.scale = tk.Scale(self, from_=from_, to=to,
-                              orient=tk.HORIZONTAL,
-                              label=name)
-        if self.out_float:
-            self.scale.config(resolution=PROBABILITY_STEP)
-        self.scale.set(value)
+
+        top_part = ttk.Frame(self)
+        top_part.pack(fill='x')
+
+        ttk.Label(top_part, text=name+":").pack(side=tk.LEFT)
+        vcmd = (self.register(self.validate))
+        self.entry = ttk.Entry(top_part, 
+                               validate='all', 
+                               validatecommand=(vcmd, '%P'))
+        self.entry.bind('<Return>', self.do_callback)
+        self.update_label(value)
+        self.entry.pack(side=tk.RIGHT)
+
+        bottom_part = ttk.Frame(self)
+        bottom_part.pack()
+    
+        self.scale = ttk.Scale(bottom_part, from_=from_, to=to,
+                               value=value,
+                               orient=tk.HORIZONTAL,
+                               length=SCALE_LENGHT,
+                               command=self.update_label)
         self.scale.bind("<ButtonRelease-1>", self.do_callback)
         self.scale.pack()
     
+    def update_label(self, new_value) -> None:
+        new_value = float(new_value)
+        if not self.out_float:
+            new_value = round(new_value)
+        self.entry.delete(0, tk.END)
+        self.entry.insert(0, round(new_value, 2))
+        pass
+    
     def do_callback(self, *_) -> None:
         if self.out_float:
-            value = float(self.scale.get())
+            value = float(self.entry.get())
         else:
-            value = int(self.scale.get())
+            value = round(float(self.entry.get()))
         self.callback(value)
-
+    
+    def validate(self, P: str) -> bool:
+        if len(P) == 0:
+            return True
+        try:
+            float(P)
+        except ValueError:
+            return False
+        else:
+            return True
+        
 class Instruments(tk.Frame):
 
     def __init__(self, parent: tk.Frame, painter: Painter) -> None:
@@ -36,9 +70,9 @@ class Instruments(tk.Frame):
         self.painter = painter
 
         Property_scale(self, 'Grid width', self.update_width,
-                       self.painter.grid.width, MAX_GRID).pack()
+                       self.painter.grid.width, MAX_GRID, from_=1).pack()
         Property_scale(self, 'Grid height', self.update_height,
-                       self.painter.grid.height, MAX_GRID).pack()
+                       self.painter.grid.height, MAX_GRID, from_=1).pack()
         
         Property_scale(self, 'Probability', self.update_probability,
                        self.painter.grid.prob, 1, out_float=True).pack()
