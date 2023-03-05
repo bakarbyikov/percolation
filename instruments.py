@@ -23,6 +23,7 @@ class Property_scale(tk.Frame):
                                validate='all', 
                                validatecommand=(vcmd, '%P'))
         self.entry.bind('<Return>', self.do_callback)
+        self.entry.bind('<FocusOut>', self.do_callback)
         self.update_label(value)
         self.entry.pack(side=tk.RIGHT)
 
