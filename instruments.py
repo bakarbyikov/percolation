@@ -13,6 +13,7 @@ class Property_scale(tk.Frame):
         super().__init__(parent)
         self.callback = callback
         self.out_float = out_float
+        self.value = value
 
         top_part = ttk.Frame(self)
         top_part.pack(fill='x')
@@ -23,6 +24,7 @@ class Property_scale(tk.Frame):
                                validate='all', 
                                validatecommand=(vcmd, '%P'))
         self.entry.bind('<Return>', self.do_callback)
+        self.entry.bind('<FocusOut>', self.do_callback)
         self.update_label(value)
         self.entry.pack(side=tk.RIGHT)
 
@@ -50,6 +52,9 @@ class Property_scale(tk.Frame):
             value = float(self.entry.get())
         else:
             value = round(float(self.entry.get()))
+        if self.value == value:
+            return
+        self.value = value
         self.callback(value)
     
     def validate(self, P: str) -> bool:
