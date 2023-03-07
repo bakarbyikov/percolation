@@ -1,19 +1,14 @@
-from functools import wraps
 from time import perf_counter
-from typing import Any, Callable, ParamSpec, TypeVar
 
 from settings import *
 
-P = ParamSpec("P")
-R = TypeVar("R")
-
-def print_elapsed_time(func: Callable[P, R]) -> Callable[P, R]:
-    @wraps(func)
-    def inner(*args: P.args, **kwargs: P.kwargs) -> R:
-        then = perf_counter()
-        res = func(*args, **kwargs)
-        elapsed = perf_counter() - then
-        if PRINT_ELAPSED_TIME:
-            print(f"{func.__qualname__}: {elapsed = }")
-        return res
-    return inner
+class print_elapsed_time:
+    def __init__(self, promt: str) -> None:
+        print(promt)
+        
+    def __enter__(self) -> None:
+        self.then = perf_counter()
+    
+    def __exit__(self, *_) -> None:
+        elapsed = perf_counter() - self.then
+        print(f"{elapsed = }")
