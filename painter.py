@@ -48,6 +48,12 @@ class Painter(tk.Frame):
     def change_grid_size(self, width: int=None, height: int=None) -> None:
         self.grid.change_size(width, height)
         self.update()
+    
+    def update_grid(self) -> None:
+        with print_elapsed_time("Grid updating"):
+            self.grid.update()
+        with print_elapsed_time("Canvas updating"):
+            self.update()
         
     def update_canvas_size(self) -> None:
         self.offset = self.padding + max(self.line_width, self.point_radius)
@@ -56,7 +62,6 @@ class Painter(tk.Frame):
         self.size = self.width, self.height
         self.canvas.config(width=self.width, height=self.height)
     
-    @print_elapsed_time
     def update(self, size_changed: bool=True) -> None:
         if size_changed:
             self.update_canvas_size()

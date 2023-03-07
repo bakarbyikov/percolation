@@ -58,7 +58,6 @@ class Grid:
         self.clusters = np.empty(self.size, Cluster)
         self.clusters_list.clear()
     
-    @print_elapsed_time
     def update(self) -> None:
         self.flood()
         self.forget_clusters()
@@ -94,7 +93,6 @@ class Grid:
             points.append(Node(x, y, cluster))
         return points
     
-    @print_elapsed_time
     def is_leaks(self) -> bool:
         if len(self.clusters_list) <= 0:
             on_borders = product((0, self.width-1), range(self.height))
@@ -123,7 +121,6 @@ class Grid:
                     backtrack.append(node)
         return backtrack
     
-    @print_elapsed_time
     def find_clusters(self, where: set=None):
         if where is None:
             self.forget_clusters()
@@ -141,19 +138,19 @@ class Grid:
 
 
 if __name__ == '__main__':
-    w, h = 500, 500
+    w, h = 1000, 1000
     grid = Grid(w, h, find_all_clusters=False)
 
-    print(f"Update without cluster finding")
-    grid.update()
+    with print_elapsed_time("Update without cluster finding"):
+        grid.update()
     print()
 
-    print(f"Update and find cluster")
-    grid.update()
-    grid.find_clusters()
+    with print_elapsed_time("Update and find cluster"):
+        grid.update()
+        grid.find_clusters()
     print()
     
-    print(f"Update and check leackage")
-    grid.update()
-    grid.is_leaks()
+    with print_elapsed_time("Update and check leackage"):
+        grid.update()
+        grid.is_leaks()
     print()
