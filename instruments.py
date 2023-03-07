@@ -84,7 +84,7 @@ class Instruments(tk.Frame):
         Property_scale(self, 'Point radius', self.update_point_radius,
                        self.painter.point_radius, MAX_POINT_RADIUS).pack()
 
-        tk.Button(self, text="Update grid", command=self.update_grid).pack(side=tk.BOTTOM)
+        tk.Button(self, text="Update grid", command=self.painter.update_grid).pack(side=tk.BOTTOM)
     
     def update_width(self, new_value: int) -> None:
         self.painter.change_grid_size(new_value, None)
@@ -102,10 +102,6 @@ class Instruments(tk.Frame):
         self.painter.update()
     def update_point_radius(self, new_value: int) -> None:
         self.painter.point_radius = new_value
-        self.painter.update()
-
-    def update_grid(self):
-        self.painter.grid.update()
         self.painter.update()
 
 if __name__ == "__main__":
