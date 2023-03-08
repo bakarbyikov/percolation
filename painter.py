@@ -14,7 +14,7 @@ class Painter(tk.Frame):
     def __init__(self, parent: tk.Frame, grid: Grid=None) -> None:
         tk.Frame.__init__(self, parent)
         self.parent = parent
-        self.grid = Grid(find_all_clusters=False) if grid is None else grid
+        self.grid = Grid() if grid is None else grid
         self.create_palette()
 
         self.line_lenght = LINE_LENGHT
@@ -73,7 +73,6 @@ class Painter(tk.Frame):
     
     def create_palette(self) -> None:
         n = len(self.grid.clusters_list)
-        print(f"{n = }")
         self.palette = np.random.randint(0, 255, (n+1, 3), np.uint8)
         self.palette[-1] = PASSIVE_COLOR
     
