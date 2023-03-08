@@ -12,26 +12,10 @@ class Cluster:
     def __init__(self, name: int, nodes: Iterable=()) -> None:
         self.name = name
         self.nodes = set(nodes)
-        self.color = '#'+token_hex(3)
     
     def add_node(self, x: int, y: int) -> None:
         self.nodes.add((x, y))
-    
-    def __lt__(self, value: 'Cluster') -> bool:
-        return self.name < value.name
 
-class Link:
-    def __init__(self, x1: int, y1: int, x2: int, y2: int, cluster: Cluster) -> None:
-        self.coords = (x1, y1, x2, y2)
-        self.cluster = cluster
-        self.color = 'white' if cluster is None else self.cluster.color
-
-class Node:
-    def __init__(self, x: int, y: int, cluster: Cluster) -> None:
-        self.coords = (x, y)
-        self.cluster = cluster
-        self.color = 'white' if cluster is None else self.cluster.color
-        
 class Grid:
 
     def __init__(self, width: int=WIDTH, height: int=HEIGHT, 
@@ -45,8 +29,8 @@ class Grid:
         self.horizontal_links = np.zeros(self.size, bool)
         self.vertical_links = np.zeros(self.size, bool)
 
-        self.clusters = np.empty(self.size, Cluster)
-        self.clusters_list = list()
+        self.clusters = np.zeros(self.size, np.uint32)
+        self.clusters_list = [None, ]
 
         self.update()
     
@@ -57,8 +41,8 @@ class Grid:
         self.vertical_links[:, -1] = False
 
     def forget_clusters(self) -> None:
-        self.clusters = np.empty(self.size, Cluster)
-        self.clusters_list.clear()
+        self.clusters = np.zeros(self.size, np.uint32)
+        self.clusters_list = [None, ]
     
     def update(self) -> None:
         self.flood()
@@ -79,23 +63,6 @@ class Grid:
         self.prob = prob
         if self.update_on_changes:
             self.update()
-    
-    def links_list(self) -> List[Link]:
-        lines = []
-        for x1, y1 in np.argwhere(self.horizontal_links):
-            cluster = self.clusters[x1, y1]
-            lines.append(Link(x1, y1, x1+1, y1, cluster))
-        for x1, y1 in np.argwhere(self.vertical_links):
-            cluster = self.clusters[x1, y1]
-            lines.append(Link(x1, y1, x1, y1+1, cluster))
-        return lines
-
-    def nodes_list(self) -> List[Node]:
-        points = []
-        for x, y in product(range(self.width), range(self.height)):
-            cluster = self.clusters[x, y]
-            points.append(Node(x, y, cluster))
-        return points
     
     def is_leaks(self) -> bool:
         if len(self.clusters_list) <= 0:
@@ -127,7 +94,6 @@ class Grid:
     
     def find_clusters(self, where: set=None):
         if where is None:
-            self.forget_clusters()
             to_visit = set(product(range(self.width), range(self.height)))
         else:
             to_visit = where
@@ -138,7 +104,10 @@ class Grid:
             cluster = Cluster(len(self.clusters_list), nodes)
             self.clusters_list.append(cluster)
             for x, y in nodes:
-                self.clusters[x, y] = cluster
+                self.clusters[x, y] = cluster.name
+    
+    def get_cluster_on(self, x: int, y: int) -> Cluster:
+        return self.clusters_list[self.clusters[x, y]]
 
 
 if __name__ == '__main__':
