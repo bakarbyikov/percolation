@@ -19,7 +19,7 @@ class Painter(tk.Frame):
         self.line_lenght = LINE_LENGHT
         self.line_width = LINE_WIDTH
         self.padding = PADDING
-        self.point_radius = POINT_RADIUS
+        self.point_diameter = POINT_DIAMETER
         
         self.canvas = tk.Canvas(self, bg=BACKGROUND_COLOR)
         self.canvas.pack()
@@ -55,7 +55,7 @@ class Painter(tk.Frame):
             self.update()
         
     def update_canvas_size(self) -> None:
-        self.offset = self.padding + max(self.line_width, self.point_radius)
+        self.offset = self.padding + max(self.line_width, self.point_diameter//2)
         self.width = (self.grid.width-1) * self.line_lenght + self.offset*2
         self.height = (self.grid.height-1) * self.line_lenght + self.offset*2
         self.size = self.width, self.height
@@ -72,18 +72,18 @@ class Painter(tk.Frame):
         self.palette = np.random.randint(0, 255, (n, 3), np.uint8)
     
     def draw_points(self, surface) -> None:
-        cur_circle = np.expand_dims(circle(self.point_radius), 2).repeat(3, axis=2)
+        cur_circle = np.dstack([circle(self.point_diameter),]*3)
         for i, cluster in enumerate(self.grid.clusters_list):
             color = self.palette[i]
             colored_circle = np.asanyarray(cur_circle[:, :] * color, np.uint8)
             for node in cluster.nodes:
-                pos = np.array(node) * self.line_lenght + self.offset - self.point_radius
+                pos = np.array(node) * self.line_lenght + self.offset - self.point_diameter//2
                 blit(surface, colored_circle, pos)
 
         color = (200, 200, 200)
         colored_circle = np.asanyarray(cur_circle[:, :] * color, np.uint8)
         for node in np.argwhere(self.grid.clusters == None):
-            pos = node * self.line_lenght + self.offset - self.point_radius
+            pos = node * self.line_lenght + self.offset - self.point_diameter//2
             blit(surface, colored_circle, pos)
     
     def _draw_line(self, surface, pos, is_horisonta):
@@ -113,8 +113,10 @@ class Painter(tk.Frame):
         pink = (255, 192, 203)
         surface = np.expand_dims(np.array(black, np.uint8), (0, 1))
         surface = surface.repeat(self.width, axis=0).repeat(self.height, axis=1)
-        self.draw_points(surface)
-        self.draw_lines(surface)
+        if self.point_diameter:
+            self.draw_points(surface)
+        if self.line_width:
+            self.draw_lines(surface)
         return surface
     
     def draw(self):
@@ -125,18 +127,24 @@ class Painter(tk.Frame):
         self.canvas.create_image(2, 2, anchor=tk.NW, image=self.ph)
         self.canvas.image = self.ph
 
-def circle(radius: int) -> np.ndarray:
+
+def circle(diameter: int) -> np.ndarray:
+    if diameter == 0:
+        raise NotImplementedError(f"Cant compute circle with diameter = 0")
+    if diameter == 1:
+        return np.array([[1,],], float)
+    if diameter == 2:
+        return np.array([[1, 1], [1, 1]], float)
+    radius = diameter / 2
     mul = 10
-    x = np.linspace(-radius, radius, radius*mul*2)
-    y = np.linspace(-radius, radius, radius*mul*2)
+    x = np.linspace(-radius, radius, diameter*mul)
+    y = np.linspace(-radius, radius, diameter*mul)
     xx, yy = np.meshgrid(x, y)
     zz = (xx**2 + yy**2) <= radius**2
-    image = np.zeros((radius*2, radius*2), float)
-    for i in range(radius*2):
-        for j in range(radius*2):
-            a = zz[i*mul:i*mul+mul, j*mul:j*mul+mul]
-            a=np.asanyarray(a, float)
-            image[i, j] = a.mean()
+    image = np.zeros((diameter, diameter), float)
+    for x, column in enumerate(np.vsplit(zz, diameter)):
+        for y, cell in enumerate(np.hsplit(column, diameter)):
+            image[x, y] = cell.mean()
     return image
 
 def blit(surface: np.ndarray, image: np.ndarray, pos: np.ndarray) -> None:
