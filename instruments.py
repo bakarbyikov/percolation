@@ -9,7 +9,7 @@ class Property_scale(tk.Frame):
 
     def __init__(self, parent, name: str, callback: Callable, 
                  value: int, to: int, from_: int=0,
-                 out_float: bool=False):
+                 step: float=1, out_float: bool=False):
         super().__init__(parent)
         self.callback = callback
         self.out_float = out_float
@@ -20,9 +20,12 @@ class Property_scale(tk.Frame):
 
         ttk.Label(top_part, text=name+":").pack(side=tk.LEFT)
         vcmd = (self.register(self.validate))
-        self.entry = ttk.Entry(top_part, 
-                               validate='all', 
-                               validatecommand=(vcmd, '%P'))
+        self.entry = ttk.Spinbox(top_part, 
+                                 from_=from_, to=to,
+                                 increment=step,
+                                 command=self.do_callback,
+                                 validate='all',
+                                 validatecommand=(vcmd, '%P'))
         self.entry.bind('<Return>', self.do_callback)
         self.entry.bind('<FocusOut>', self.do_callback)
         self.update_label(value)
@@ -52,6 +55,7 @@ class Property_scale(tk.Frame):
             value = float(self.entry.get())
         else:
             value = round(float(self.entry.get()))
+        self.scale.set(float(self.entry.get()))
         if self.value == value:
             return
         self.value = value
@@ -80,7 +84,8 @@ class Instruments(tk.Frame):
                        self.painter.grid.height, MAX_GRID, from_=1).pack()
         
         Property_scale(self, 'Probability', self.update_probability,
-                       self.painter.grid.prob, 1, out_float=True).pack()
+                       self.painter.grid.prob, 1, step=PROBABILITY_STEP, 
+                       out_float=True).pack()
         
         Property_scale(self, 'Line lenght', self.update_line_lenght,
                        self.painter.line_lenght, MAX_LINE_LENGHT).pack()
@@ -89,7 +94,8 @@ class Instruments(tk.Frame):
         Property_scale(self, 'Point diameter', self.update_point_radius,
                        self.painter.point_diameter, MAX_POINT_RADIUS).pack()
 
-        tk.Button(self, text="Update grid", command=self.painter.update_grid).pack(side=tk.BOTTOM)
+        tk.Button(self, text="Update grid", 
+                  command=self.painter.update_grid).pack(side=tk.BOTTOM)
     
     def update_width(self, new_value: int) -> None:
         self.painter.change_grid_size(new_value, None)
