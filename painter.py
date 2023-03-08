@@ -1,9 +1,10 @@
 import tkinter as tk
-from random import choices
 
 import numpy as np
+from PIL import Image as im
+from PIL import ImageTk as itk
 
-from grid import Grid, Link, Node
+from grid import Grid
 from misc import print_elapsed_time
 from settings import *
 
@@ -29,8 +30,7 @@ class Painter(tk.Frame):
         self.canvas.bind('<Button-3>', self.on_right_mouse)
 
     def on_middle_mouse(self, *_) -> None:
-        size = choices(range(10, 40), k=2)
-        self.grid.change_size(*size)
+        self.grid.is_leaks()
         self.update()
 
     def on_right_mouse(self, *_) -> None:
@@ -38,8 +38,7 @@ class Painter(tk.Frame):
         self.update(size_changed=False)
     
     def on_left_mouse(self, *_) -> None:
-        self.grid.update()
-        self.update(size_changed=False)
+        self.update_grid()
     
     def change_grid_probability(self, prob: float) -> None:
         self.grid.change_probability(prob)
@@ -67,32 +66,86 @@ class Painter(tk.Frame):
             self.update_canvas_size()
         self.canvas.delete("all")
         self.draw()
+    
+    def create_palette(self) -> None:
+        n = len(self.grid.clusters_list)
+        self.palette = np.random.randint(0, 255, (n, 3), np.uint8)
+    
+    def draw_points(self, surface) -> None:
+        cur_circle = np.expand_dims(circle(self.point_radius), 2).repeat(3, axis=2)
+        for i, cluster in enumerate(self.grid.clusters_list):
+            color = self.palette[i]
+            colored_circle = np.asanyarray(cur_circle[:, :] * color, np.uint8)
+            for node in cluster.nodes:
+                pos = np.array(node) * self.line_lenght + self.offset - self.point_radius
+                blit(surface, colored_circle, pos)
 
-    def draw_point(self, point: Node) -> None:
-        coords = np.array(point.coords)
-        coords *= self.line_lenght
-        coords += self.offset
-        x, y = coords
-        r = self.point_radius
-        self.canvas.create_oval(x-r, y-r, x+r-1, y+r-1, fill=point.color, outline='')
+        color = (200, 200, 200)
+        colored_circle = np.asanyarray(cur_circle[:, :] * color, np.uint8)
+        for node in np.argwhere(self.grid.clusters == None):
+            pos = np.array(node) * self.line_lenght + self.offset - self.point_radius
+            blit(surface, colored_circle, pos)
+    
+    def draw_lines(self, surface) -> None:
+        for pos in np.argwhere(self.grid.horizontal_links):
+            # print(pos, type(pos), self.grid.clusters[pos])
+            if self.grid.clusters[tuple(pos)] is None:
+                color = (200, 200, 200)
+            else:
+                color = self.palette[self.grid.clusters[tuple(pos)].name]
+            left_top = pos * self.line_lenght + self.offset
+            left_top -= (0, self.line_width//2)
+            right_bottom = left_top + (self.line_lenght, self.line_width)
+            surface[left_top[0]:right_bottom[0], left_top[1]:right_bottom[1], :] = color[:]
 
-    def draw_line(self, line: Link) -> None:
-        coords = np.array(line.coords)
-        coords *= self.line_lenght
-        coords += self.offset
-        self.canvas.create_line(*coords, width=self.line_width, fill=line.color)
+        for pos in np.argwhere(self.grid.vertical_links):
+            if self.grid.clusters[tuple(pos)] is None:
+                color = (200, 200, 200)
+            else:
+                color = self.palette[self.grid.clusters[tuple(pos)].name]
+            left_top = pos * self.line_lenght + self.offset
+            left_top -= (self.line_width//2, 0)
+            right_bottom = left_top + (self.line_width, self.line_lenght)
+            surface[left_top[0]:right_bottom[0], left_top[1]:right_bottom[1], :] = color[:]
+    
+    def compute_image(self):
+        black = (0, 0, 0)
+        pink = (255, 192, 203)
+        surface = np.expand_dims(np.array(black, np.uint8), (0, 1))
+        surface = surface.repeat(self.width, axis=0).repeat(self.height, axis=1)
+        self.draw_points(surface)
+        self.draw_lines(surface)
+        return surface
     
     def draw(self):
-        if self.point_radius:
-            for point in self.grid.nodes_list():
-                self.draw_point(point)
-        if self.line_width:
-            for line in self.grid.links_list():
-                self.draw_line(line)
+        self.create_palette()
+        image = self.compute_image()
+        image = image.transpose(1, 0, 2)
+        self.ph = itk.PhotoImage(im.fromarray(image))
+        self.canvas.create_image(self.width//2, self.height//2, image=self.ph)
+        self.canvas.image = self.ph
+
+def circle(radius: int) -> np.ndarray:
+    mul = 10
+    x = np.linspace(-radius, radius, radius*mul*2)
+    y = np.linspace(-radius, radius, radius*mul*2)
+    xx, yy = np.meshgrid(x, y)
+    zz = (xx**2 + yy**2) <= radius**2
+    image = np.zeros((radius*2, radius*2), float)
+    for i in range(radius*2):
+        for j in range(radius*2):
+            a = zz[i*mul:i*mul+mul, j*mul:j*mul+mul]
+            a=np.asanyarray(a, float)
+            image[i, j] = a.mean()
+    return image
+
+def blit(surface: np.ndarray, image: np.ndarray, pos: np.ndarray) -> None:
+    end = pos + image.shape[:2]
+    surface[pos[0]:end[0], pos[1]:end[1], :] = image[:, :, :]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     root = tk.Tk()
-    painter = Painter(root)
-    painter.pack()
+    p = Painter(root)
+    p.pack()
     root.mainloop()

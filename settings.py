@@ -1,5 +1,5 @@
 #Debug output
-PRINT_ELAPSED_TIME = False
+PRINT_ELAPSED_TIME = True
 
 #Grid default settings
 SIZE = WIDTH, HEIGHT = 40, 40
