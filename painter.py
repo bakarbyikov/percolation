@@ -122,7 +122,7 @@ class Painter(tk.Frame):
         image = self.compute_image()
         image = image.transpose(1, 0, 2)
         self.ph = itk.PhotoImage(im.fromarray(image))
-        self.canvas.create_image(self.width//2, self.height//2, image=self.ph)
+        self.canvas.create_image(2, 2, anchor=tk.NW, image=self.ph)
         self.canvas.image = self.ph
 
 def circle(radius: int) -> np.ndarray:
