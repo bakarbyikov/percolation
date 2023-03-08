@@ -29,6 +29,9 @@ class Painter(tk.Frame):
         self.canvas.bind('<Button-2>', self.on_middle_mouse)
         self.canvas.bind('<Button-3>', self.on_right_mouse)
 
+    def on_left_mouse(self, *_) -> None:
+        self.update_grid()
+
     def on_middle_mouse(self, *_) -> None:
         self.grid.is_leaks()
         self.update()
@@ -36,9 +39,6 @@ class Painter(tk.Frame):
     def on_right_mouse(self, *_) -> None:
         self.grid.find_clusters()
         self.update(size_changed=False)
-    
-    def on_left_mouse(self, *_) -> None:
-        self.update_grid()
     
     def change_grid_probability(self, prob: float) -> None:
         self.grid.change_probability(prob)
@@ -83,31 +83,31 @@ class Painter(tk.Frame):
         color = (200, 200, 200)
         colored_circle = np.asanyarray(cur_circle[:, :] * color, np.uint8)
         for node in np.argwhere(self.grid.clusters == None):
-            pos = np.array(node) * self.line_lenght + self.offset - self.point_radius
+            pos = node * self.line_lenght + self.offset - self.point_radius
             blit(surface, colored_circle, pos)
+    
+    def _draw_line(self, surface, pos, is_horisonta):
+        if self.grid.clusters[tuple(pos)] is None:
+            color = (200, 200, 200)
+        else:
+            color = self.palette[self.grid.clusters[tuple(pos)].name]
+
+        left_top = pos * self.line_lenght + self.offset
+        if is_horisonta:
+            left_top -= (0, self.line_width//2)
+            right_bottom = left_top + (self.line_lenght, self.line_width)
+        else:
+            left_top -= (self.line_width//2, 0)
+            right_bottom = left_top + (self.line_width, self.line_lenght)
+
+        surface[left_top[0]:right_bottom[0], left_top[1]:right_bottom[1], :] = color[:]
     
     def draw_lines(self, surface) -> None:
         for pos in np.argwhere(self.grid.horizontal_links):
-            # print(pos, type(pos), self.grid.clusters[pos])
-            if self.grid.clusters[tuple(pos)] is None:
-                color = (200, 200, 200)
-            else:
-                color = self.palette[self.grid.clusters[tuple(pos)].name]
-            left_top = pos * self.line_lenght + self.offset
-            left_top -= (0, self.line_width//2)
-            right_bottom = left_top + (self.line_lenght, self.line_width)
-            surface[left_top[0]:right_bottom[0], left_top[1]:right_bottom[1], :] = color[:]
-
+            self._draw_line(surface, pos, True)
         for pos in np.argwhere(self.grid.vertical_links):
-            if self.grid.clusters[tuple(pos)] is None:
-                color = (200, 200, 200)
-            else:
-                color = self.palette[self.grid.clusters[tuple(pos)].name]
-            left_top = pos * self.line_lenght + self.offset
-            left_top -= (self.line_width//2, 0)
-            right_bottom = left_top + (self.line_width, self.line_lenght)
-            surface[left_top[0]:right_bottom[0], left_top[1]:right_bottom[1], :] = color[:]
-    
+            self._draw_line(surface, pos, False)
+
     def compute_image(self):
         black = (0, 0, 0)
         pink = (255, 192, 203)
