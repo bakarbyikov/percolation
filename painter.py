@@ -76,20 +76,25 @@ class Painter(tk.Frame):
         self.palette = np.random.randint(0, 255, (n+1, 3), np.uint8)
         self.palette[-1] = PASSIVE_COLOR
     
-    def draw_points(self, surface) -> None:
-        circle = compute_circle(self.point_diameter)
+    def compute_colors(self) -> None:
         offset = self.line_lenght-self.point_diameter
-        padded_circle = np.pad(circle, ((0, offset), (0, offset)))
-        circle_mask = np.tile(padded_circle, (3, self.grid.width, self.grid.height))\
-                              .transpose(1, 2, 0)
-
         color_surface = np.tile(self.grid.clusters, (3, 1, 1)).transpose(1, 2, 0)
         for z in range(3):
             color_surface[..., z] = self.palette[color_surface[..., z], z]
         color_surface = color_surface.repeat(self.point_diameter+offset, axis=0)\
             .repeat(self.point_diameter+offset, axis=1)
+        self.color_surface = color_surface
+    
+    def draw_points(self, surface) -> None:
+        circle = compute_circle(self.point_diameter)
+        offset = self.line_lenght-self.point_diameter
+        if offset < 0:
+            raise ValueError(f"Circles overlap {self.point_diameter = } > {self.line_lenght = }")
+        padded_circle = np.pad(circle, ((0, offset), (0, offset)))
+        circle_mask = np.tile(padded_circle, (3, self.grid.width, self.grid.height))\
+                              .transpose(1, 2, 0)
 
-        image = color_surface * circle_mask
+        image = self.color_surface * circle_mask
         if offset > 0:
             image = image[:-offset, :-offset]
         blit(surface, image, np.array((self.offset-self.point_diameter//2,)*2))
@@ -119,6 +124,7 @@ class Painter(tk.Frame):
     def compute_image(self):
         black = (0, 0, 0)
         pink = (255, 192, 203)
+        self.compute_colors()
         surface = np.tile(black, (self.width, self.height, 1)).astype(np.uint8)
         if self.point_diameter:
             self.draw_points(surface)
