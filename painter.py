@@ -116,8 +116,7 @@ class Painter(tk.Frame):
     def compute_image(self):
         black = (0, 0, 0)
         pink = (255, 192, 203)
-        surface = np.expand_dims(np.array(black, np.uint8), (0, 1))
-        surface = surface.repeat(self.width, axis=0).repeat(self.height, axis=1)
+        surface = np.tile(black, (self.width, self.height, 1)).astype(np.uint8)
         if self.point_diameter:
             self.draw_points(surface)
         if self.line_width:
