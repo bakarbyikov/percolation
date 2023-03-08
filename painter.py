@@ -14,7 +14,7 @@ class Painter(tk.Frame):
     def __init__(self, parent: tk.Frame, grid: Grid=None) -> None:
         tk.Frame.__init__(self, parent)
         self.parent = parent
-        self.grid = Grid() if grid is None else grid
+        self.grid = Grid(find_all_clusters=False) if grid is None else grid
         self.create_palette()
 
         self.line_lenght = LINE_LENGHT
@@ -35,11 +35,13 @@ class Painter(tk.Frame):
 
     def on_middle_mouse(self, *_) -> None:
         self.grid.is_leaks()
-        self.update(size_changed=False)
+        self.create_palette()
+        self.update()
 
     def on_right_mouse(self, *_) -> None:
         self.grid.find_clusters()
-        self.update(size_changed=False)
+        self.create_palette()
+        self.update()
     
     def change_grid_probability(self, prob: float) -> None:
         self.grid.change_probability(prob)
@@ -71,7 +73,9 @@ class Painter(tk.Frame):
     
     def create_palette(self) -> None:
         n = len(self.grid.clusters_list)
-        self.palette = np.random.randint(0, 255, (n, 3), np.uint8)
+        print(f"{n = }")
+        self.palette = np.random.randint(0, 255, (n+1, 3), np.uint8)
+        self.palette[-1] = PASSIVE_COLOR
     
     def draw_points(self, surface) -> None:
         cur_circle = np.dstack([circle(self.point_diameter),]*3)
@@ -82,7 +86,7 @@ class Painter(tk.Frame):
                 pos = np.array(node) * self.line_lenght + self.offset - self.point_diameter//2
                 blit(surface, colored_circle, pos)
 
-        color = (200, 200, 200)
+        color = self.palette[-1]
         colored_circle = np.asanyarray(cur_circle[:, :] * color, np.uint8)
         for node in np.argwhere(self.grid.clusters == None):
             pos = node * self.line_lenght + self.offset - self.point_diameter//2
@@ -90,7 +94,7 @@ class Painter(tk.Frame):
     
     def _draw_line(self, surface, pos, is_horisonta):
         if self.grid.clusters[tuple(pos)] is None:
-            color = (200, 200, 200)
+            color = self.palette[-1]
         else:
             color = self.palette[self.grid.clusters[tuple(pos)].name]
 
