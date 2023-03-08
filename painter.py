@@ -81,15 +81,17 @@ class Painter(tk.Frame):
         offset = self.line_lenght-self.point_diameter
         padded_circle = np.pad(circle, ((0, offset), (0, offset)))
         circle_mask = np.tile(padded_circle, (3, self.grid.width, self.grid.height))\
-                              .transpose(1, 2, 0)[:-offset, :-offset]
-        
+                              .transpose(1, 2, 0)
+
         color_surface = np.tile(self.grid.clusters, (3, 1, 1)).transpose(1, 2, 0)
         for z in range(3):
             color_surface[..., z] = self.palette[color_surface[..., z], z]
         color_surface = color_surface.repeat(self.point_diameter+offset, axis=0)\
-            .repeat(self.point_diameter+offset, axis=1)[:-offset, :-offset]
-        
+            .repeat(self.point_diameter+offset, axis=1)
+
         image = color_surface * circle_mask
+        if offset > 0:
+            image = image[:-offset, :-offset]
         blit(surface, image, np.array((self.offset-self.point_diameter//2,)*2))
     
     def _draw_line(self, surface, pos, is_horisonta):
