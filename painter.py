@@ -15,6 +15,7 @@ class Painter(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.parent = parent
         self.grid = Grid() if grid is None else grid
+        self.create_palette()
 
         self.line_lenght = LINE_LENGHT
         self.line_width = LINE_WIDTH
@@ -34,7 +35,7 @@ class Painter(tk.Frame):
 
     def on_middle_mouse(self, *_) -> None:
         self.grid.is_leaks()
-        self.update()
+        self.update(size_changed=False)
 
     def on_right_mouse(self, *_) -> None:
         self.grid.find_clusters()
@@ -42,16 +43,17 @@ class Painter(tk.Frame):
     
     def change_grid_probability(self, prob: float) -> None:
         self.grid.change_probability(prob)
-        self.update()
+        self.update_grid()
 
     def change_grid_size(self, width: int=None, height: int=None) -> None:
         self.grid.change_size(width, height)
-        self.update()
+        self.update_grid()
     
     def update_grid(self) -> None:
         with print_elapsed_time("Grid updating"):
             self.grid.update()
         with print_elapsed_time("Canvas updating"):
+            self.create_palette()
             self.update()
         
     def update_canvas_size(self) -> None:
@@ -120,7 +122,6 @@ class Painter(tk.Frame):
         return surface
     
     def draw(self):
-        self.create_palette()
         image = self.compute_image()
         image = image.transpose(1, 0, 2)
         self.ph = itk.PhotoImage(im.fromarray(image))

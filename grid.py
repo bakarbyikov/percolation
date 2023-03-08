@@ -35,10 +35,12 @@ class Node:
 class Grid:
 
     def __init__(self, width: int=WIDTH, height: int=HEIGHT, 
-                 prob: float=PROBABILITY, find_all_clusters=True) -> None:
+                 prob: float=PROBABILITY, find_all_clusters=True,
+                 update_on_changes=False) -> None:
         self.size = self.width, self.height = width, height
         self.prob = prob
         self.find_all_clusters = find_all_clusters
+        self.update_on_changes = update_on_changes
 
         self.horizontal_links = np.zeros(self.size, bool)
         self.vertical_links = np.zeros(self.size, bool)
@@ -70,11 +72,13 @@ class Grid:
         if height is not None:
             self.height = height
         self.size = self.width, self.height
-        self.update()
+        if self.update_on_changes:
+            self.update()
     
     def change_probability(self, prob: float) -> None:
         self.prob = prob
-        self.update()
+        if self.update_on_changes:
+            self.update()
     
     def links_list(self) -> List[Link]:
         lines = []
