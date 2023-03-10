@@ -95,7 +95,6 @@ class Painter(tk.Frame):
         if gap:
             color_surface = color_surface[:-gap, :-gap]
         
-        print(f"{color_surface.shape = }")
         self.color_surface = color_surface
     
     def draw_points(self, surface) -> None:
@@ -113,16 +112,19 @@ class Painter(tk.Frame):
                                            (offset_lt, offset_rb),
                                            (0, 0)))
 
-        print(f"{padded_mask.shape = }")
         blit(surface, self.color_surface, padded_mask)
     
-    def draw_lines(self, surface) -> None:
+    def draw_lines(self, surface, is_horisontal: bool) -> None:
+        if is_horisontal:
+            target = self.grid.horizontal_links
+        else:
+            target = self.grid.vertical_links.T
         gap = self.line_lenght - self.line_width
-        lines = self.grid.horizontal_links.repeat(self.line_lenght, axis=0)\
+        lines = target.repeat(self.line_lenght, axis=0)\
             .repeat(self.line_lenght, axis=1)[:-self.line_lenght]
         line_mask = np.concatenate((np.ones((lines.shape[0], self.line_width)),
                                     np.zeros((lines.shape[0], gap))), axis=1)
-        lines_mask = np.tile(line_mask, (1, self.grid.height))
+        lines_mask = np.tile(line_mask, (1, target.shape[1]))
         masked_lines = lines * lines_mask
         if gap:
             masked_lines = masked_lines[:, :-gap]
@@ -131,6 +133,9 @@ class Painter(tk.Frame):
         offset_b = self.offset_rb - ceil(self.line_width / 2)
         padded_mask = np.pad(masked_lines, ((self.offset_lt, self.offset_rb),
                                             (offset_t, offset_b)))
+        if not is_horisontal:
+            padded_mask = padded_mask.T
+
         epanded_mask = np.tile(padded_mask, (3, 1, 1)).transpose(1, 2, 0)
         
         blit(surface, self.color_surface, epanded_mask)
@@ -139,11 +144,11 @@ class Painter(tk.Frame):
     def compute_image(self):
         self.compute_colors()
         surface = np.tile(BACKGROUND_COLOR, (self.width, self.height, 1)).astype(np.uint8)
-        print(f"{surface.shape = }")
         if self.point_diameter:
             self.draw_points(surface)
         if self.line_width:
-            self.draw_lines(surface)
+            self.draw_lines(surface, True)
+            self.draw_lines(surface, False)
         return surface
     
     def draw(self):
