@@ -108,11 +108,21 @@ class Grid:
     
     def get_cluster_on(self, x: int, y: int) -> Cluster:
         return self.clusters_list[self.clusters[x, y]]
+    
+    def print(self) -> str:
+        symbols = ['▘ ', '▀▀', '▌ ', '▛▀']
+        for y in range(self.height):
+            row = []
+            for x in range(self.width):
+                i = self.horizontal_links[x, y] + self.vertical_links[x, y]*2
+                row.append(symbols[i])
+            print(''.join(row))
 
 
 if __name__ == '__main__':
-    w, h = 1000, 1000
+    w, h = 10, 10
     grid = Grid(w, h, find_all_clusters=False)
+    grid.print()
 
     with print_elapsed_time("Update without cluster finding"):
         grid.update()
