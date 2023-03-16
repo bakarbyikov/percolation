@@ -5,8 +5,9 @@ from typing import Tuple
 import numpy as np
 from PIL import Image as im
 from PIL import ImageTk as itk
+from cluster_info import Cluster_info
 
-from grid import Grid
+from grid import Cluster, Grid
 from misc import print_elapsed_time, color_from_rgb
 from settings import *
 
@@ -32,8 +33,11 @@ class Painter(tk.Frame):
         self.canvas.bind('<Button-2>', self.on_middle_mouse)
         self.canvas.bind('<Button-3>', self.on_right_mouse)
 
-    def on_left_mouse(self, *_) -> None:
-        self.update_grid()
+    def on_left_mouse(self, event) -> None:
+        widget_coord = event.x, event.y
+        x, y = self.widget_coords_to_grid(widget_coord)
+        cluster = self.grid.get_cluster_on(x, y)
+        self.show_cluster_info(cluster)
 
     def on_middle_mouse(self, *_) -> None:
         self.grid.is_leaks()
@@ -44,6 +48,20 @@ class Painter(tk.Frame):
         self.grid.find_clusters()
         self.create_palette()
         self.update()
+
+    def show_cluster_info(self, cluster: Cluster) -> None:
+        window = tk.Toplevel(self)
+        Cluster_info(window, cluster).pack()
+    
+    def widget_coords_to_grid(self, coord: Tuple[int, int]) -> Tuple[int, int]:
+        pos = np.array(coord)
+        pos -= self.offset_lt
+        pos -= self.padding
+        pos = np.around(pos / self.line_lenght).astype(int)
+        pos = np.maximum(pos, [0, 0])
+        pos = np.minimum(pos, [self.grid.width-1, self.grid.height-1])
+        print(pos)
+        return tuple(pos)
     
     def change_grid_probability(self, prob: float) -> None:
         self.grid.change_probability(prob)
