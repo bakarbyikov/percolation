@@ -1,26 +1,18 @@
 import tkinter as tk
 
-from instruments import Instruments
+from instruments import Instruments_panel
 from painter import Painter
 from settings import *
 
 
-class App(tk.Frame):
+class App(tk.Tk):
 
-    def __init__(self, parent, *args, **kwargs) -> None:
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-
-        painter_window = tk.Toplevel(self)
-        painter_window.protocol("WM_DELETE_WINDOW", root.destroy)
-        self.painter = Painter(painter_window)
-        self.painter.pack()
-
-        self.instruments = Instruments(self, self.painter)
+    def __init__(self) -> None:
+        super().__init__()
+        self.title("Percolation - Tools")
+        self.painter = Painter(self)
+        self.instruments = Instruments_panel(self, self.painter)
         self.instruments.pack()
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    root.title("Percolation")
-    App(root).pack(side="top", fill="both", expand=True)
-    root.mainloop()
+    App().mainloop()

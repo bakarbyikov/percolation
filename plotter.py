@@ -10,22 +10,22 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from grid import Grid
 
 
-def do_experiment(grid: Grid, times: int=10**3) -> float:
+def leakage_chance(grid: Grid, times: int=10**3) -> float:
     n_leaks = 0
     for _ in range(times):
         grid.update()
         n_leaks += grid.is_leaks()
     return n_leaks / times
 
-def do_graph(num: int=31, size: Tuple[int, int]=(10, 10)):
-    grid = Grid(*size)
+def do_graph(num: int=31, size: Tuple[int, int]=(20, 20)):
+    grid = Grid(*size, find_all_clusters=False, update_on_init=False)
     x = np.linspace(0, 1, num)
     y = list()
     total_time = 0
     for probability in x:
         grid.change_probability(probability)
         then = perf_counter()
-        leak_percent = do_experiment(grid)
+        leak_percent = leakage_chance(grid)
         elapsed = perf_counter() - then
         total_time += elapsed
         y.append(leak_percent)
@@ -34,14 +34,15 @@ def do_graph(num: int=31, size: Tuple[int, int]=(10, 10)):
     plt.plot(x, y)
     plt.show()
 
-class Cluster_count(tk.Frame):
+class Cluster_count(tk.Toplevel):
 
     def __init__(self, parent, grid: Grid) -> None:
         super().__init__(parent)
         self.parent = parent
+        self.title("Percolation - Analyse")
         self.grid = grid
         
-        figure = plt.Figure(figsize=(10,5), dpi=100)
+        figure = plt.Figure(figsize=(6,3), dpi=100)
         chart_type = FigureCanvasTkAgg(figure, self)
         chart_type.get_tk_widget().pack()
 
@@ -72,7 +73,6 @@ if __name__ == "__main__":
     grid = Grid()
     root = tk.Tk()
     c = Cluster_count(root, grid)
-    c.pack()
     
     def update_on_click(*_):
         grid.update()
@@ -81,3 +81,5 @@ if __name__ == "__main__":
 
     root.bind('<Button-1>', update_on_click)
     root.mainloop()
+
+    do_graph()

@@ -1,6 +1,4 @@
 import tkinter as tk
-from tkinter import ttk
-from typing import Callable
 
 from painter import Painter
 from plotter import Cluster_count
@@ -8,12 +6,12 @@ from settings import *
 from widgets import Property_scale
 
 
-class Instruments(tk.Frame):
+class Instruments_panel(tk.Frame):
 
-    def __init__(self, parent: tk.Frame, painter: Painter) -> None:
-        tk.Frame.__init__(self, parent)
-        self.parent = parent
+    def __init__(self, parent, painter: Painter) -> None:
+        super().__init__(parent)
         self.painter = painter
+        self.grid = painter.grid
         self.cluster_count = None
 
         Property_scale(self, 'Grid width', self.update_width,
@@ -41,41 +39,44 @@ class Instruments(tk.Frame):
     
     def plot_clusters(self) -> None:
         if self.cluster_count is None:
-            window = tk.Toplevel(self)
-            self.cluster_count = Cluster_count(window, self.painter.grid)
-            self.cluster_count.pack()
+            self.cluster_count = Cluster_count(self, self.grid)
         else:
-            self.cluster_count.parent.destroy()
-            self.cluster_count = None
+            self.cluster_count.destroy()
+            self.cluster_count = Cluster_count(self, self.grid)
     
     def update_grid(self) -> None:
-        self.painter.update_grid()
-        if self.cluster_count is not None:
-            self.cluster_count.update()
+        self.grid.update()
+        self.update()
     
     def update_width(self, new_value: int) -> None:
-        self.painter.change_grid_size(new_value, None)
+        self.grid.change_size(new_value, None)
+        self.update()
     def update_height(self, new_value: int) -> None:
-        self.painter.change_grid_size(None, new_value)
+        self.grid.change_size(None, new_value)
+        self.update()
         
     def update_probability(self, new_value: int) -> None:
-        self.painter.change_grid_probability(new_value)
+        self.grid.change_probability(new_value)
+        self.update()
 
     def update_line_lenght(self, new_value: int) -> None:
         self.painter.line_lenght = new_value
-        self.painter.update()
+        self.painter.update(False)
     def update_line_width(self, new_value: int) -> None:
         self.painter.line_width = new_value
-        self.painter.update()
+        self.painter.update(False)
     def update_point_radius(self, new_value: int) -> None:
         self.painter.point_diameter = new_value
+        self.painter.update(False)
+    
+    def update(self) -> None:
         self.painter.update()
+        if self.cluster_count is not None:
+            self.cluster_count.update()
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title('Percolation')
     p = Painter(root)
-    i = Instruments(root, p)
-    p.pack(side=tk.LEFT)
-    i.pack(side=tk.LEFT)
+    i = Instruments_panel(root, p)
+    i.pack()
     root.mainloop()

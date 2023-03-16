@@ -36,7 +36,7 @@ class Grid:
 
     def __init__(self, width: int=WIDTH, height: int=HEIGHT, 
                  prob: float=PROBABILITY, find_all_clusters=True,
-                 update_on_changes=False, update_on_init=True) -> None:
+                 update_on_changes=True, update_on_init=True) -> None:
         self.size = self.width, self.height = width, height
         self.prob = prob
         self.find_all_clusters = find_all_clusters
@@ -82,7 +82,7 @@ class Grid:
             self.update()
     
     def is_leaks(self) -> bool:
-        if len(self.clusters_list) <= 0:
+        if len(self.clusters_list) <= 1:
             on_borders = product((0, self.width-1), range(self.height))
             self.find_clusters(set(on_borders))
         clusters_left = self.clusters[0, :]

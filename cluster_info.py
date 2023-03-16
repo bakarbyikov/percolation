@@ -2,11 +2,13 @@ import tkinter as tk
 from tkinter import ttk
 from grid import Cluster
 
-class Cluster_info(tk.Frame):
+class Cluster_info(tk.Toplevel):
 
     def __init__(self, parent, cluster: Cluster) -> None:
         super().__init__(parent)
+        self.title("Percolation - Cluster Info")
         self.cluster = cluster
+
         info = {"Name": self.cluster.name,
                 "Area": self.cluster.area,
                 "Center of mass": self.cluster.center_of_mass,

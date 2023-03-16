@@ -1,22 +1,24 @@
-from math import ceil, floor
 import tkinter as tk
+from math import ceil
 from typing import Tuple
 
 import numpy as np
 from PIL import Image as im
 from PIL import ImageTk as itk
-from cluster_info import Cluster_info
 
-from grid import Cluster, Grid
-from misc import print_elapsed_time, color_from_rgb
+from cluster_info import Cluster_info
+from grid import Grid
+from misc import color_from_rgb
 from settings import *
 
 
-class Painter(tk.Frame):
+class Painter(tk.Toplevel):
 
-    def __init__(self, parent: tk.Frame, grid: Grid=None) -> None:
-        tk.Frame.__init__(self, parent)
+    def __init__(self, parent, grid: Grid=None) -> None:
+        super().__init__(parent)
         self.parent = parent
+        self.title("Percolation - Grid")
+        self.protocol("WM_DELETE_WINDOW", self.parent.destroy)
         self.grid = Grid() if grid is None else grid
         self.create_palette()
 
@@ -34,10 +36,7 @@ class Painter(tk.Frame):
         self.canvas.bind('<Button-3>', self.on_right_mouse)
 
     def on_left_mouse(self, event) -> None:
-        widget_coord = event.x, event.y
-        x, y = self.widget_coords_to_grid(widget_coord)
-        cluster = self.grid.get_cluster_on(x, y)
-        self.show_cluster_info(cluster)
+        self.show_cluster_info((event.x, event.y))
 
     def on_middle_mouse(self, *_) -> None:
         self.grid.is_leaks()
@@ -49,9 +48,10 @@ class Painter(tk.Frame):
         self.create_palette()
         self.update()
 
-    def show_cluster_info(self, cluster: Cluster) -> None:
-        window = tk.Toplevel(self)
-        Cluster_info(window, cluster).pack()
+    def show_cluster_info(self, widget_coord: Tuple[int, int]) -> None:
+        x, y = self.widget_coords_to_grid(widget_coord)
+        cluster = self.grid.get_cluster_on(x, y)
+        Cluster_info(self, cluster)
     
     def widget_coords_to_grid(self, coord: Tuple[int, int]) -> Tuple[int, int]:
         pos = np.array(coord)
@@ -60,23 +60,7 @@ class Painter(tk.Frame):
         pos = np.around(pos / self.line_lenght).astype(int)
         pos = np.maximum(pos, [0, 0])
         pos = np.minimum(pos, [self.grid.width-1, self.grid.height-1])
-        print(pos)
         return tuple(pos)
-    
-    def change_grid_probability(self, prob: float) -> None:
-        self.grid.change_probability(prob)
-        self.update_grid()
-
-    def change_grid_size(self, width: int=None, height: int=None) -> None:
-        self.grid.change_size(width, height)
-        self.update_grid()
-    
-    def update_grid(self) -> None:
-        with print_elapsed_time("Grid updating"):
-            self.grid.update()
-        with print_elapsed_time("Canvas updating"):
-            self.create_palette()
-            self.update()
         
     def update_canvas_size(self) -> None:
         self.offset = max(self.line_width, self.point_diameter)
@@ -91,9 +75,10 @@ class Painter(tk.Frame):
         self.size = self.width, self.height
         self.canvas.config(width=self.width+self.padding*2, height=self.height+self.padding*2)
     
-    def update(self, size_changed: bool=True) -> None:
-        if size_changed:
-            self.update_canvas_size()
+    def update(self, grid_changed: bool=True) -> None:
+        self.update_canvas_size()
+        if grid_changed:
+            self.create_palette()
         self.canvas.delete("all")
         self.draw()
     
