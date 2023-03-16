@@ -1,4 +1,6 @@
+from functools import cached_property, reduce
 from itertools import product
+from math import pi, sqrt
 from typing import List, Set, Tuple
 
 import numpy as np
@@ -8,12 +10,27 @@ from settings import *
 
 
 class Cluster:
-    def __init__(self, name: int, nodes: set=None) -> None:
+    def __init__(self, name: int, nodes: set) -> None:
         self.name = name
-        self.nodes = set() if nodes is None else nodes
+        self.nodes = nodes
+
+    @cached_property
+    def center_of_mass(self) -> Tuple[float, float]:
+        x, y = reduce(lambda x, y: (x[0]+y[0], x[1]+y[1]), self.nodes)
+        x, y = x/self.size, y/self.size
+        return x, y
     
-    def add_node(self, x: int, y: int) -> None:
-        self.nodes.add((x, y))
+    @cached_property
+    def radius(self) -> float:
+        return sqrt(self.area / pi)
+
+    @cached_property
+    def area(self) -> int:
+        return self.size
+
+    @cached_property
+    def size(self) -> int:
+        return len(self.nodes)
 
 class Grid:
 
