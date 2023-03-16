@@ -20,7 +20,7 @@ class Grid:
 
     def __init__(self, width: int=WIDTH, height: int=HEIGHT, 
                  prob: float=PROBABILITY, find_all_clusters=True,
-                 update_on_changes=False) -> None:
+                 update_on_changes=False, update_on_init=True) -> None:
         self.size = self.width, self.height = width, height
         self.prob = prob
         self.find_all_clusters = find_all_clusters
@@ -32,7 +32,8 @@ class Grid:
         self.clusters = np.zeros(self.size, np.uint32)
         self.clusters_list = [None, ]
 
-        self.update()
+        if update_on_init:
+            self.update()
     
     def flood(self) -> None:
         self.horizontal_links = np.random.rand(self.width, self.height) < self.prob
@@ -110,14 +111,32 @@ class Grid:
         return self.clusters_list[self.clusters[x, y]]
     
     def print(self) -> str:
-        symbols = ['▘ ', '▀▀', '▌ ', '▛▀']
+        symbols = str.maketrans({'0':'▘ ', '1':'▀▀', '2':'▌ ', '3':'▛▀'})
+        print(self.to_text().translate(symbols))
+    
+    def to_text(self) -> str:
+        rows_list = []
         for y in range(self.height):
-            row = []
+            rows_list.append([])
             for x in range(self.width):
                 i = self.horizontal_links[x, y] + self.vertical_links[x, y]*2
-                row.append(symbols[i])
-            print(''.join(row))
-
+                rows_list[-1].append(str(i))
+            rows_list[-1] = ''.join(rows_list[-1])
+        text = '\n'.join(rows_list)
+        return text
+    
+    @classmethod
+    def from_text(cls, text: str) -> 'Grid':
+        w, h = text.find('\n'), text.count('\n')+1
+        print(f"{w, h = }")
+        grid = Grid(w, h, update_on_init=False)
+        for y, row in enumerate(text.splitlines()):
+            for x, cell in enumerate(row):
+                if cell in ('1', '3'):
+                    grid.horizontal_links[x, y] = True
+                if cell in ('2', '3'):
+                    grid.vertical_links[x, y] = True
+        return grid
 
 if __name__ == '__main__':
     w, h = 10, 10
