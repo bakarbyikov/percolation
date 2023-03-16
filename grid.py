@@ -1,6 +1,5 @@
 from itertools import product
-from secrets import token_hex
-from typing import Iterable, List, Tuple
+from typing import List, Set, Tuple
 
 import numpy as np
 
@@ -9,9 +8,9 @@ from settings import *
 
 
 class Cluster:
-    def __init__(self, name: int, nodes: Iterable=()) -> None:
+    def __init__(self, name: int, nodes: set=None) -> None:
         self.name = name
-        self.nodes = set(nodes)
+        self.nodes = set() if nodes is None else nodes
     
     def add_node(self, x: int, y: int) -> None:
         self.nodes.add((x, y))
@@ -73,25 +72,29 @@ class Grid:
         clusters_right = self.clusters[-1, :]
         leak = np.intersect1d(clusters_left, clusters_right)
         return leak.size > 0
+
+    def find_connected(self, x: int, y: int) -> List[Tuple[int, int]]:
+        connected = list()
+        if x+1 < self.width and self.horizontal_links[x, y]:
+            connected.append((x+1, y))
+        if y+1 < self.height and self.vertical_links[x, y]:
+            connected.append((x, y+1))
+        if x > 0 and self.horizontal_links[x-1, y]:
+            connected.append((x-1, y))
+        if y > 0 and self.vertical_links[x, y-1]:
+            connected.append((x, y-1))
+        return connected
     
-    def DFS(self, start: Tuple[int, int]) -> List[Tuple[int, int]]:
+    def DFS(self, start: Tuple[int, int]) -> Set[Tuple[int, int]]:
         visited = set((start, ))
         backtrack = [start, ]
-        for x, y in backtrack:
-            connected = list()
-            if x+1 < self.width and self.horizontal_links[x, y]:
-                connected.append((x+1, y))
-            if y+1 < self.height and self.vertical_links[x, y]:
-                connected.append((x, y+1))
-            if x > 0 and self.horizontal_links[x-1, y]:
-                connected.append((x-1, y))
-            if y > 0 and self.vertical_links[x, y-1]:
-                connected.append((x, y-1))
-            for node in connected:
+        while backtrack:
+            x, y = backtrack.pop()
+            for node in self.find_connected(x, y):
                 if node not in visited:
                     visited.add(node)
                     backtrack.append(node)
-        return backtrack
+        return visited
     
     def find_clusters(self, where: set=None):
         if where is None:
@@ -139,20 +142,18 @@ class Grid:
         return grid
 
 if __name__ == '__main__':
-    w, h = 10, 10
-    grid = Grid(w, h, find_all_clusters=False)
-    grid.print()
+    w, h = 1000, 1000
+    grid = Grid(w, h, find_all_clusters=False, update_on_init=False)
 
     with print_elapsed_time("Update without cluster finding"):
         grid.update()
     print()
 
-    with print_elapsed_time("Update and find cluster"):
-        grid.update()
-        grid.find_clusters()
-    print()
-    
     with print_elapsed_time("Update and check leackage"):
-        grid.update()
         grid.is_leaks()
+    print()
+   
+    grid.update()
+    with print_elapsed_time("Update and find cluster"):
+        grid.find_clusters()
     print()
