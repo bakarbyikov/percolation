@@ -79,6 +79,7 @@ class Instruments(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.parent = parent
         self.painter = painter
+        self.cluster_count = None
 
         Property_scale(self, 'Grid width', self.update_width,
                        self.painter.grid.width, MAX_GRID, from_=1).pack()
@@ -104,11 +105,18 @@ class Instruments(tk.Frame):
                   command=self.plot_clusters).pack(side=tk.LEFT, padx=10)
     
     def plot_clusters(self) -> None:
-        window = tk.Toplevel(self)
-        self.cluster_count = Cluster_count(window, self.painter.grid).pack()
+        if self.cluster_count is None:
+            window = tk.Toplevel(self)
+            self.cluster_count = Cluster_count(window, self.painter.grid)
+            self.cluster_count.pack()
+        else:
+            self.cluster_count.parent.destroy()
+            self.cluster_count = None
     
     def update_grid(self) -> None:
         self.painter.update_grid()
+        if self.cluster_count is not None:
+            self.cluster_count.update()
     
     def update_width(self, new_value: int) -> None:
         self.painter.change_grid_size(new_value, None)

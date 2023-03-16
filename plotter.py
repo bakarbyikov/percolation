@@ -40,7 +40,17 @@ class Cluster_count(tk.Frame):
         super().__init__(parent)
         self.parent = parent
         self.grid = grid
-        self.do_plot()
+        
+        figure = plt.Figure(figsize=(10,5), dpi=100)
+        chart_type = FigureCanvasTkAgg(figure, self)
+        chart_type.get_tk_widget().pack()
+
+        self.ax = figure.add_subplot(111)
+        self.ax.set_title("Number of clusters of each size")
+        self.ax.set_xlabel("Cluster size")
+        self.ax.set_ylabel("Number of clusters")
+
+        self.update()
     
     def count_clusters(self) -> dict:
         counter = Counter()
@@ -51,20 +61,23 @@ class Cluster_count(tk.Frame):
         x = list(map(str, x))
         return x, y
     
-    def do_plot(self) -> None:
-        figure = plt.Figure(figsize=(10,5), dpi=100)
-        ax = figure.add_subplot(111)
-        chart_type = FigureCanvasTkAgg(figure, self)
-        chart_type.get_tk_widget().pack()
+    def update(self) -> None:
+        self.ax.clear()
         data = self.count_clusters()
-        ax.bar(*data)
-        ax.set_title("Number of clusters of each size")
-        ax.set_xlabel("Cluster size")
-        ax.set_ylabel("Number of clusters")
+        self.ax.bar(*data)
+        self.ax.figure.canvas.draw_idle()
+
 
 if __name__ == "__main__":
     grid = Grid()
     root = tk.Tk()
     c = Cluster_count(root, grid)
     c.pack()
+    
+    def update_on_click(*_):
+        grid.update()
+        grid.print()
+        c.update()
+
+    root.bind('<Button-1>', update_on_click)
     root.mainloop()
