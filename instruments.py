@@ -3,7 +3,9 @@ from tkinter import ttk
 from typing import Callable
 
 from painter import Painter
+from plotter import Cluster_count
 from settings import *
+
 
 class Property_scale(tk.Frame):
 
@@ -94,8 +96,19 @@ class Instruments(tk.Frame):
         Property_scale(self, 'Point diameter', self.update_point_radius,
                        self.painter.point_diameter, MAX_POINT_RADIUS).pack()
 
-        tk.Button(self, text="Update grid", 
-                  command=self.painter.update_grid).pack(side=tk.BOTTOM)
+        buttons = tk.Frame(self)
+        buttons.pack(side=tk.BOTTOM)
+        tk.Button(buttons, text="Update grid", 
+                  command=self.update_grid).pack(side=tk.LEFT, padx=10)
+        tk.Button(buttons, text="Clusters size", 
+                  command=self.plot_clusters).pack(side=tk.LEFT, padx=10)
+    
+    def plot_clusters(self) -> None:
+        window = tk.Toplevel(self)
+        self.cluster_count = Cluster_count(window, self.painter.grid).pack()
+    
+    def update_grid(self) -> None:
+        self.painter.update_grid()
     
     def update_width(self, new_value: int) -> None:
         self.painter.change_grid_size(new_value, None)
