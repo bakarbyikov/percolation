@@ -5,7 +5,6 @@ from typing import List, Set, Tuple
 
 import numpy as np
 
-from misc import print_elapsed_time
 from settings import *
 
 
@@ -82,24 +81,48 @@ class Grid:
             self.update()
     
     def is_leaks(self) -> bool:
-        if len(self.clusters_list) <= 1:
-            on_borders = product((0, self.width-1), range(self.height))
-            self.find_clusters(set(on_borders))
-        clusters_left = self.clusters[0, :]
-        clusters_right = self.clusters[-1, :]
-        leak = np.intersect1d(clusters_left, clusters_right)
-        return leak.size > 0
+        on_left_border = product((0, ), range(self.height))
+        to_visit = set(on_left_border)
+        
+        while to_visit:
+            leaks, nodes = self.is_cluster_leaks(to_visit.pop())
+            if leaks:
+                return True
+            to_visit.difference_update(nodes)
+        return False
+    
+    def is_cluster_leaks(self, start: Tuple[int, int]) -> Tuple[bool, set]:
+        visited = set((start, ))
+        backtrack = [start, ]
+        while backtrack:
+            x, y = backtrack.pop()
+            connected = self.find_connected(x, y)
+            if not connected:
+                continue
+            if connected[-1][0] == self.width-1:
+                visited.add(connected[-1])
+                return True, visited
+            for node in connected:
+                if node not in visited:
+                    visited.add(node)
+                    backtrack.append(node)
+        return False, visited
 
     def find_connected(self, x: int, y: int) -> List[Tuple[int, int]]:
         connected = list()
-        if x+1 < self.width and self.horizontal_links[x, y]:
-            connected.append((x+1, y))
-        if y+1 < self.height and self.vertical_links[x, y]:
-            connected.append((x, y+1))
+        # Left
         if x > 0 and self.horizontal_links[x-1, y]:
             connected.append((x-1, y))
+        # Bottom
+        if y+1 < self.height and self.vertical_links[x, y]:
+            connected.append((x, y+1))
+        # Top
         if y > 0 and self.vertical_links[x, y-1]:
             connected.append((x, y-1))
+        # Right
+        if x+1 < self.width and self.horizontal_links[x, y]:
+            connected.append((x+1, y))
+
         return connected
     
     def DFS(self, start: Tuple[int, int]) -> Set[Tuple[int, int]]:
@@ -113,12 +136,9 @@ class Grid:
                     backtrack.append(node)
         return visited
     
-    def find_clusters(self, where: set=None):
-        if where is None:
-            to_visit = set(product(range(self.width), range(self.height)))
-        else:
-            to_visit = where
-            
+    def find_clusters(self):
+        to_visit = set(product(range(self.width), range(self.height)))  
+        
         while to_visit:
             nodes = self.DFS(to_visit.pop())
             to_visit.difference_update(nodes)
@@ -159,18 +179,22 @@ class Grid:
         return grid
 
 if __name__ == '__main__':
+    from perf_measurer import count_time
     w, h = 1000, 1000
     grid = Grid(w, h, find_all_clusters=False, update_on_init=False)
 
-    with print_elapsed_time("Update without cluster finding"):
-        grid.update()
-    print()
-
-    with print_elapsed_time("Update and check leackage"):
+    with count_time() as timer:
         grid.is_leaks()
-    print()
+    print(f"Update without cluster finding:")
+    print(timer.elapsed)
+
+    with count_time() as timer:
+        grid.is_leaks()
+    print("Update and check leackage")
+    print(timer.elapsed)
    
     grid.update()
-    with print_elapsed_time("Update and find cluster"):
+    with count_time() as timer:
         grid.find_clusters()
-    print()
+    print("Update and find clusters")
+    print(timer.elapsed)
