@@ -43,13 +43,11 @@ class Cluster_count(tk.Toplevel):
         self.grid = grid
         
         figure = plt.Figure(figsize=(6,3), dpi=100)
+        figure.subplots_adjust(bottom=0.2)
         chart_type = FigureCanvasTkAgg(figure, self)
         chart_type.get_tk_widget().pack()
 
-        self.ax = figure.add_subplot(111)
-        self.ax.set_title("Number of clusters of each size")
-        self.ax.set_xlabel("Cluster size")
-        self.ax.set_ylabel("Number of clusters")
+        self.ax = figure.add_subplot()
 
         self.update()
     
@@ -64,6 +62,9 @@ class Cluster_count(tk.Toplevel):
     
     def update(self) -> None:
         self.ax.clear()
+        self.ax.set_title("Number of clusters of each size")
+        self.ax.set_xlabel("Cluster size")
+        self.ax.set_ylabel("Number of clusters")
         data = self.count_clusters()
         self.ax.bar(*data)
         self.ax.figure.canvas.draw_idle()
