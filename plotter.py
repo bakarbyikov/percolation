@@ -1,38 +1,57 @@
 import tkinter as tk
 from collections import Counter
-from time import perf_counter
-from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from tqdm import tqdm
 
 from grid import Grid
 
 
-def leakage_chance(grid: Grid, times: int=10**3) -> float:
+def leakage_chance(grid: Grid, times: int=10**4) -> float:
     n_leaks = 0
     for _ in range(times):
         grid.update()
         n_leaks += grid.is_leaks()
     return n_leaks / times
 
-def do_graph(num: int=31, size: Tuple[int, int]=(20, 20)):
-    grid = Grid(*size, find_all_clusters=False, update_on_init=False)
-    x = np.linspace(0, 1, num)
-    y = list()
-    total_time = 0
-    for probability in x:
-        grid.change_probability(probability)
-        then = perf_counter()
-        leak_percent = leakage_chance(grid)
-        elapsed = perf_counter() - then
-        total_time += elapsed
-        y.append(leak_percent)
-        print(f"{probability = :0.2f}, {leak_percent = }, {elapsed = }")
-    print(f"{total_time = }")
-    plt.plot(x, y)
+def one_test(sizes, prob_points, grid, data, i):
+    for y, s in enumerate(sizes):
+        grid.change_size(s, s)
+        for x, p in enumerate(prob_points):
+            grid.change_probability(p)
+            grid.update()
+            data[x, y, i] = grid.is_leaks()
+
+
+def do_graph(num: int=20):
+    grid = Grid(find_all_clusters=False, update_on_init=False, update_on_changes=False)
+
+    power = 2
+    sizes = np.arange(2, 20)
+    prob_points = np.linspace(1, 0, num//2, endpoint=False)**power / 2 + 0.5
+    prob_points = np.concatenate((prob_points, -np.flip(prob_points)+1))
+    prob_points = np.flip(prob_points)
+    print(prob_points)
+    data = np.full((*prob_points.shape, *sizes.shape, 10**4), float('nan'))
+        
+    fig = plt.figure(figsize=(8, 8))
+    ax1 = fig.add_subplot(projection='3d')
+    X, Y = np.meshgrid(sizes, prob_points)
+
+    for i in tqdm(range(10**3)):
+        for y, s in enumerate(sizes):
+            grid.change_size(s, s)
+            for x, p in enumerate(prob_points):
+                grid.change_probability(p)
+                grid.update()
+                data[x, y, i] = grid.is_leaks()
+    Z = np.nanmean(data, axis=2)
+    ax1.clear()
+    ax1.plot_surface(X, Y, Z)
     plt.show()
+
 
 class Cluster_count(tk.Toplevel):
 
@@ -71,16 +90,4 @@ class Cluster_count(tk.Toplevel):
 
 
 if __name__ == "__main__":
-    grid = Grid()
-    root = tk.Tk()
-    c = Cluster_count(root, grid)
-    
-    def update_on_click(*_):
-        grid.update()
-        grid.print()
-        c.update()
-
-    root.bind('<Button-1>', update_on_click)
-    root.mainloop()
-
     do_graph()
