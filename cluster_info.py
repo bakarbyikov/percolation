@@ -1,6 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
-from grid import Cluster
+from collections import Counter
+
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+from grid import Cluster, Grid
+
 
 class Cluster_info(tk.Toplevel):
 
@@ -19,4 +25,40 @@ class Cluster_info(tk.Toplevel):
         for title, value in info.items():
             ttk.Label(left, text=str(title)+':').pack( padx=10, anchor=tk.W)
             ttk.Label(right, text=str(value)).pack(padx=10, anchor=tk.W)
+
+
+class Cluster_count(tk.Toplevel):
+
+    def __init__(self, parent, grid: Grid) -> None:
+        super().__init__(parent)
+        self.parent = parent
+        self.title("Percolation - Analyse")
+        self.grid = grid
+        
+        figure = plt.Figure(figsize=(6,3), dpi=100)
+        figure.subplots_adjust(bottom=0.2)
+        chart_type = FigureCanvasTkAgg(figure, self)
+        chart_type.get_tk_widget().pack()
+
+        self.ax = figure.add_subplot()
+
+        self.update()
+    
+    def count_clusters(self) -> dict:
+        counter = Counter()
+        for cluster in self.grid.clusters_list[1:]:
+            counter[len(cluster.nodes)] += 1
+        x = sorted(counter.keys())
+        y = [counter[i] for i in x]
+        x = list(map(str, x))
+        return x, y
+    
+    def update(self) -> None:
+        self.ax.clear()
+        self.ax.set_title("Number of clusters of each size")
+        self.ax.set_xlabel("Cluster size")
+        self.ax.set_ylabel("Number of clusters")
+        data = self.count_clusters()
+        self.ax.bar(*data)
+        self.ax.figure.canvas.draw_idle()
 

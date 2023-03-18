@@ -1,7 +1,7 @@
 import tkinter as tk
 
+from cluster_info import Cluster_count
 from painter import Painter
-from plotter import Cluster_count
 from settings import *
 from widgets import Property_scale
 
