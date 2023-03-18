@@ -51,9 +51,9 @@ class Grid:
             self.update()
     
     def flood(self) -> None:
-        self.horizontal_links = np.random.rand(self.width, self.height) < self.prob
+        self.horizontal_links = np.random.binomial(1, self.prob, self.size)
+        self.vertical_links = np.random.binomial(1, self.prob, self.size)
         self.horizontal_links[-1, :] = False
-        self.vertical_links = np.random.rand(self.width, self.height) < self.prob
         self.vertical_links[:, -1] = False
 
     def forget_clusters(self) -> None:
