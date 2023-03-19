@@ -33,7 +33,7 @@ def do_graph():
     ax1 = fig.add_subplot(projection='3d')
     ax1.set_xlabel("Размер сетки")
     ax1.set_ylabel("Вероятность связи")
-    ax1.set_zlabel("Шинс Протечки")
+    ax1.set_zlabel("Шанс Протечки")
     X, Y = np.meshgrid(sizes, prob_points)
     Z = np.nanmean(data, axis=2)
     ax1.plot_surface(X, Y, Z)
