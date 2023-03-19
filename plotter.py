@@ -12,7 +12,7 @@ def do_graph():
     #Вероятность связи
     prob_points = np.linspace(0, 1, 20)
     #Количество тестов на каждую сетку
-    total_n_points = 10**3
+    total_n_points = 10**4
 
     #Количество тестов на кажду вероятность связи
     n_tests = np.abs(1/(prob_points-0.5))
