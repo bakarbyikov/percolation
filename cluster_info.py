@@ -1,3 +1,4 @@
+from functools import partial
 import tkinter as tk
 from tkinter import ttk
 from collections import Counter
@@ -15,9 +16,10 @@ class Cluster_info(tk.Toplevel):
         self.title("Percolation - Cluster Info")
         self.cluster = cluster
 
+        center_of_mass = tuple(round(i, 3) for i in self.cluster.center_of_mass)
         info = {"Name": self.cluster.name,
                 "Area": self.cluster.area,
-                "Center of mass": self.cluster.center_of_mass,
+                "Center of mass": center_of_mass,
                 "Radius": self.cluster.radius}
         
         for i, (title, value) in enumerate(info.items()):
