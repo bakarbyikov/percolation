@@ -30,6 +30,7 @@ class Painter(tk.Toplevel):
         self.canvas = tk.Canvas(self, bg=color_from_rgb(BACKGROUND_COLOR))
         self.canvas.pack()
         self.update()
+        self.cluster_info = None
         
         self.canvas.bind('<Button-1>', self.on_left_mouse)
         self.canvas.bind('<Button-2>', self.on_middle_mouse)
@@ -51,7 +52,9 @@ class Painter(tk.Toplevel):
     def show_cluster_info(self, widget_coord: Tuple[int, int]) -> None:
         x, y = self.widget_coords_to_grid(widget_coord)
         cluster = self.grid.get_cluster_on(x, y)
-        Cluster_info(self, cluster)
+        if self.cluster_info is not None:
+            self.cluster_info.destroy()
+        self.cluster_info = Cluster_info(self, cluster)
     
     def widget_coords_to_grid(self, coord: Tuple[int, int]) -> Tuple[int, int]:
         pos = np.array(coord)
