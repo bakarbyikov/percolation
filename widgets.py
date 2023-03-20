@@ -10,7 +10,7 @@ class Property_scale(tk.Frame):
     def __init__(self, parent, name: str, callback: Callable, 
                  value: int, to: int, from_: int=0,
                  step: float=1, out_float: bool=False):
-        super().__init__(parent)
+        super().__init__(parent, padding=5)
         self.callback = callback
         self.out_float = out_float
         self.value = value
@@ -32,13 +32,15 @@ class Property_scale(tk.Frame):
         self.entry.pack(side=tk.RIGHT)
 
         bottom_part = ttk.Frame(self)
-        bottom_part.pack()
+        bottom_part.pack(pady=(0, 15))
     
-        self.scale = ttk.Scale(bottom_part, from_=from_, to=to,
-                               value=value,
-                               orient=tk.HORIZONTAL,
-                               length=SCALE_LENGHT,
-                               command=self.update_label)
+        self.scale = tk.Scale(bottom_part, from_=from_, to=to,
+                              showvalue=False,
+                              resolution=step,
+                              orient=tk.HORIZONTAL,
+                              length=SCALE_LENGHT,
+                              command=self.update_label)
+        self.scale.set(value)
         self.scale.bind("<ButtonRelease-1>", self.do_callback)
         self.scale.pack()
     
