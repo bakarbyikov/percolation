@@ -10,13 +10,13 @@ class Property_scale(tk.Frame):
     def __init__(self, parent, name: str, callback: Callable, 
                  value: int, to: int, from_: int=0,
                  step: float=1, out_float: bool=False):
-        super().__init__(parent, padding=5)
+        super().__init__(parent)
         self.callback = callback
         self.out_float = out_float
         self.value = value
 
         top_part = ttk.Frame(self)
-        top_part.pack(fill='x')
+        top_part.pack(fill='x', pady=(5, 0), padx=5)
 
         ttk.Label(top_part, text=name+":").pack(side=tk.LEFT)
         vcmd = (self.register(self.validate))
