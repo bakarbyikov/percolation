@@ -19,12 +19,16 @@ class Cluster_info(tk.Toplevel):
                 "Area": self.cluster.area,
                 "Center of mass": self.cluster.center_of_mass,
                 "Radius": self.cluster.radius}
-        left, right = tk.Frame(self), tk.Frame(self)
-        left.pack(side=tk.LEFT)
-        right.pack(side=tk.LEFT)
-        for title, value in info.items():
-            ttk.Label(left, text=str(title)+':').pack( padx=10, anchor=tk.W)
-            ttk.Label(right, text=str(value)).pack(padx=10, anchor=tk.W)
+        
+        for i, (title, value) in enumerate(info.items()):
+            ttk.Label(self, text=str(title)+':', font=('Helvetica', 12))\
+                .grid(column=0, row=i,
+                      sticky=tk.W,
+                      pady=(0, 10))
+            ttk.Label(self, text=str(value), font=('Helvetica', 12))\
+                .grid(column=1, row=i,
+                      sticky=tk.W, 
+                      pady=(0, 10))
 
 
 class Cluster_count(tk.Toplevel):
