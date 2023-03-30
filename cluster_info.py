@@ -1,4 +1,3 @@
-from functools import partial
 import tkinter as tk
 from tkinter import ttk
 from collections import Counter
@@ -54,7 +53,7 @@ class Cluster_count(tk.Toplevel):
         counter = Counter()
         for cluster in self.grid.clusters_list[1:]:
             counter[len(cluster.nodes)] += 1
-        x = sorted(counter.keys())
+        x = sorted(counter.keys())[:30]
         y = [counter[i] for i in x]
         x = list(map(str, x))
         return x, y
@@ -64,6 +63,7 @@ class Cluster_count(tk.Toplevel):
         self.ax.set_title("Number of clusters of each size")
         self.ax.set_xlabel("Cluster size")
         self.ax.set_ylabel("Number of clusters")
+        self.ax.tick_params(axis='x', labelrotation=45)
         data = self.count_clusters()
         self.ax.bar(*data)
         self.ax.figure.canvas.draw_idle()
