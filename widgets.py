@@ -7,12 +7,12 @@ from settings import *
 
 class Property_scale(tk.Frame):
 
-    def __init__(self, parent, name: str, callback: Callable, 
-                 value: int, to: int, from_: int=0,
-                 step: float=1, out_float: bool=False):
+    def __init__(self, parent, name: str, callback: Callable, *,
+                 from_: int|float=0, to: int|float=1, 
+                 value: int|float=0, step: int|float=1):
         super().__init__(parent)
         self.callback = callback
-        self.out_float = out_float
+        self.out_float = not(isinstance(step, int) or step.is_integer())
         self.value = value
 
         top_part = ttk.Frame(self)
