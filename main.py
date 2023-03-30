@@ -12,7 +12,7 @@ class App(tk.Tk):
         self.title("Percolation - Tools")
         self.painter = Painter(self)
         self.instruments = Instruments_panel(self, self.painter)
-        self.instruments.pack()
+        self.instruments.pack(pady=20, padx=20)
 
 if __name__ == "__main__":
     App().mainloop()
