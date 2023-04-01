@@ -17,7 +17,8 @@ black = (0, 0, 0)
 pink = (255, 192, 203)
 
 #Canvas draw settings
-PADDING = 20
+WINDOW_ZISE = 800, 400
+PADDING = 5
 LINE_LENGHT = 20
 LINE_WIDTH = 10
 POINT_DIAMETER = 10

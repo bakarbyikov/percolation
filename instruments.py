@@ -49,6 +49,7 @@ class Instruments_panel(tk.Frame):
     
     def update_grid(self) -> None:
         self.grid.update()
+        self.adjust_size()
         self.update()
     
     def update_line_width(self, value: int|float) -> None:
@@ -65,8 +66,8 @@ class Instruments_panel(tk.Frame):
         self.painter.line_width = round(self.painter.point_diameter*self.line_width)
 
     def adjust_size(self) -> None:
-        screen_width = int(self.parent.winfo_screenwidth()*0.9)
-        screen_height = int(self.parent.winfo_screenheight()*0.9)
+        screen_width = self.painter.winfo_width()-self.painter.padding*2
+        screen_height = self.painter.winfo_height()-self.painter.padding*2
         self.painter.line_lenght = min(max(int(screen_width / self.grid.width), 1),
                                        max(int(screen_height / self.grid.height), 1))
         self.update_line()

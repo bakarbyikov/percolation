@@ -17,6 +17,7 @@ class Painter(tk.Toplevel):
     def __init__(self, parent, grid: Grid=None) -> None:
         super().__init__(parent)
         self.parent = parent
+        self.geometry("x".join(map(str, WINDOW_ZISE)))
         self.title("Percolation - Grid")
         self.protocol("WM_DELETE_WINDOW", self.parent.destroy)
         self.grid = Grid() if grid is None else grid
@@ -27,9 +28,10 @@ class Painter(tk.Toplevel):
         self.padding = PADDING
         self.point_diameter = POINT_DIAMETER
         
-        self.canvas = tk.Canvas(self, bg=color_from_rgb(BACKGROUND_COLOR))
-        self.canvas.pack()
-        self.update()
+        self.canvas = tk.Canvas(self, bg=color_from_rgb(BACKGROUND_COLOR), 
+                                highlightthickness=0)
+        self.canvas.pack(fill=tk.BOTH, expand=True)
+        self.after(500, self.update)
         self.cluster_info = None
         
         self.canvas.bind('<Button-1>', self.on_left_mouse)
@@ -161,8 +163,8 @@ class Painter(tk.Toplevel):
         image = self.compute_image()
         image = image.transpose(1, 0, 2)
         self.ph = itk.PhotoImage(im.fromarray(image))
-        self.canvas.create_image(self.padding+2, self.padding+2, 
-                                 anchor=tk.NW, image=self.ph)
+        self.canvas.create_image(self.canvas.winfo_width()//2, self.canvas.winfo_height()//2, 
+                                 anchor=tk.CENTER, image=self.ph)
         self.canvas.image = self.ph
 
 
@@ -193,5 +195,4 @@ def blit(surface: np.ndarray, image: np.ndarray, mask: np.ndarray) -> None:
 if __name__ == "__main__":
     root = tk.Tk()
     p = Painter(root)
-    p.pack()
     root.mainloop()
