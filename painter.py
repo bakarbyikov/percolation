@@ -1,12 +1,14 @@
+from functools import partial
+from time import perf_counter
 import tkinter as tk
 from math import ceil
 from typing import Tuple
 
 import numpy as np
-from PIL import Image as im
 from PIL import ImageTk as itk
 
 from cluster_info import Cluster_info
+from graphics import Drawer
 from grid import Grid
 from misc import color_from_rgb
 from settings import *
@@ -21,22 +23,37 @@ class Painter(tk.Toplevel):
         self.title("Percolation - Grid")
         self.protocol("WM_DELETE_WINDOW", self.parent.destroy)
         self.grid = Grid() if grid is None else grid
-        self.create_palette()
+        self.drawer = Drawer(self.grid)
 
-        self.line_lenght = LINE_LENGHT
-        self.line_width = LINE_WIDTH
         self.padding = PADDING
-        self.point_diameter = POINT_DIAMETER
+        self.line_size = LINE_SIZE
+        self.gap_size = GAP_SIZE
+        self.size = None, None
         
         self.canvas = tk.Canvas(self, bg=color_from_rgb(BACKGROUND_COLOR), 
                                 highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True)
-        self.after(500, self.update)
         self.cluster_info = None
         
         self.canvas.bind('<Button-1>', self.on_left_mouse)
         self.canvas.bind('<Button-2>', self.on_middle_mouse)
         self.canvas.bind('<Button-3>', self.on_right_mouse)
+        self.resizing = None
+        self.bind('<Configure>', self.on_configure)
+    
+    def on_configure(self, event) -> None:
+        new_size = event.width, event.height
+        if new_size == self.size:
+            return
+        self.size = new_size
+        if self.resizing is not None:
+            self.after_cancel(self.resizing)
+        self.resizing = self.after(100, self.on_resize)
+    
+    def on_resize(self) -> None:
+        print("resizing")
+        self.resizing = None
+        self.update(grid_changed=False)
 
     def on_left_mouse(self, event) -> None:
         self.show_cluster_info((event.x, event.y))
@@ -66,133 +83,43 @@ class Painter(tk.Toplevel):
         pos = np.maximum(pos, [0, 0])
         pos = np.minimum(pos, [self.grid.width-1, self.grid.height-1])
         return tuple(pos)
-        
-    def update_canvas_size(self) -> None:
-        self.offset = max(self.line_width, self.point_diameter)
-        self.offset_lt = self.offset // 2
-        self.offset_rb = self.offset - self.offset_lt
-
-        if self.offset > self.line_lenght:
-            raise NotImplementedError(f"Cant draw image with overlaps!")
-
-        self.width = (self.grid.width-1) * self.line_lenght + self.offset
-        self.height = (self.grid.height-1) * self.line_lenght + self.offset
-        self.size = self.width, self.height
-        self.canvas.config(width=self.width+self.padding*2, height=self.height+self.padding*2)
     
-    def update(self, grid_changed: bool=True) -> None:
-        self.update_canvas_size()
+    def update_line(self) -> None:
+        image_width = self.winfo_width() - self.padding*2
+        image_height = self.winfo_height() - self.padding*2
+        line_lenght = max(1, min(int(image_width / (self.grid.width-1)), 
+                                 int(image_height / (self.grid.height-1))))
+        
+        point_diameter = ceil(line_lenght * self.gap_size)
+        line_width = round(point_diameter * self.line_size)
+        self.drawer.set_properties(line_lenght,
+                                   line_width,
+                                   point_diameter)
+
+    def on_grid_change(self) -> None:
+        self.update()
+    def on_propery_change(self) -> None:
+        self.update(grid_changed=False)
+    def update(self, property_changed: bool=True, grid_changed: bool=True) -> None:
         if grid_changed:
-            self.create_palette()
+            self.drawer.create_palette()
+        if property_changed:
+            self.update_line()
         self.canvas.delete("all")
         self.draw()
     
-    def create_palette(self) -> None:
-        n = len(self.grid.clusters_list)
-        self.palette = np.random.randint(0, 255, (n+1, 3), np.uint8)
-        self.palette[0] = PASSIVE_COLOR
-    
-    def compute_colors(self) -> None:
-        color_surface = np.tile(self.grid.clusters, (3, 1, 1)).transpose(1, 2, 0)
-        for z in range(3):
-            color_surface[..., z] = self.palette[color_surface[..., z], z]
-        color_surface = color_surface.repeat(self.line_lenght, axis=0)\
-            .repeat(self.line_lenght, axis=1)
-        
-        gap = self.line_lenght - self.offset
-        if gap:
-            color_surface = color_surface[:-gap, :-gap]
-        
-        self.color_surface = color_surface
-    
-    def draw_points(self, surface) -> None:
-        circle = compute_circle(self.point_diameter)
-        gap = self.line_lenght - self.point_diameter
-        padded_circle = np.pad(circle, ((0, gap), (0, gap)))
-        circle_mask = np.tile(padded_circle, (3, self.grid.width, self.grid.height))\
-            .transpose(1, 2, 0)
-        if gap:
-            circle_mask = circle_mask[:-gap, :-gap]
-
-        offset_lt = self.offset_lt - self.point_diameter // 2
-        offset_rb = self.offset_rb - ceil(self.point_diameter / 2)
-        padded_mask = np.pad(circle_mask, ((offset_lt, offset_rb),
-                                           (offset_lt, offset_rb),
-                                           (0, 0)))
-
-        blit(surface, self.color_surface, padded_mask)
-    
-    def draw_lines(self, surface, is_horisontal: bool) -> None:
-        if is_horisontal:
-            target = self.grid.horizontal_links
-        else:
-            target = self.grid.vertical_links.T
-        gap = self.line_lenght - self.line_width
-        lines = target.repeat(self.line_lenght, axis=0)\
-            .repeat(self.line_lenght, axis=1)[:-self.line_lenght]
-        line_mask = np.concatenate((np.ones((lines.shape[0], self.line_width)),
-                                    np.zeros((lines.shape[0], gap))), axis=1)
-        lines_mask = np.tile(line_mask, (1, target.shape[1]))
-        masked_lines = lines * lines_mask
-        if gap:
-            masked_lines = masked_lines[:, :-gap]
-
-        offset_t = self.offset_lt - self.line_width // 2
-        offset_b = self.offset_rb - ceil(self.line_width / 2)
-        padded_mask = np.pad(masked_lines, ((self.offset_lt, self.offset_rb),
-                                            (offset_t, offset_b)))
-        if not is_horisontal:
-            padded_mask = padded_mask.T
-
-        epanded_mask = np.tile(padded_mask, (3, 1, 1)).transpose(1, 2, 0)
-        
-        blit(surface, self.color_surface, epanded_mask)
-
-
-    def compute_image(self):
-        self.compute_colors()
-        surface = np.tile(BACKGROUND_COLOR, (self.width, self.height, 1)).astype(np.uint8)
-        if self.point_diameter:
-            self.draw_points(surface)
-        if self.line_width:
-            self.draw_lines(surface, True)
-            self.draw_lines(surface, False)
-        return surface
-    
     def draw(self):
-        image = self.compute_image()
-        image = image.transpose(1, 0, 2)
-        self.ph = itk.PhotoImage(im.fromarray(image))
-        self.canvas.create_image(self.canvas.winfo_width()//2, self.canvas.winfo_height()//2, 
+        image = self.drawer.compute_image()
+        self.ph = itk.PhotoImage(image)
+        self.canvas.create_image(self.canvas.winfo_width()//2, 
+                                 self.canvas.winfo_height()//2, 
                                  anchor=tk.CENTER, image=self.ph)
         self.canvas.image = self.ph
-
-
-def compute_circle(diameter: int) -> np.ndarray:
-    if diameter == 0:
-        raise NotImplementedError(f"Cant compute circle with diameter = 0")
-    if diameter == 1:
-        return np.array([[1,],], float)
-    if diameter == 2:
-        return np.array([[1, 1], [1, 1]], float)
-    radius = diameter / 2
-    mul = 10
-    x = np.linspace(-radius, radius, diameter*mul)
-    y = np.linspace(-radius, radius, diameter*mul)
-    xx, yy = np.meshgrid(x, y)
-    zz = (xx**2 + yy**2) <= radius**2
-    image = np.zeros((diameter, diameter), float)
-    for x, column in enumerate(np.vsplit(zz, diameter)):
-        for y, cell in enumerate(np.hsplit(column, diameter)):
-            image[x, y] = cell.mean()
-    return image
-
-def blit(surface: np.ndarray, image: np.ndarray, mask: np.ndarray) -> None:
-    surface[...] = surface * (1-mask)
-    surface[...] = surface + image * mask
-
 
 if __name__ == "__main__":
     root = tk.Tk()
     p = Painter(root)
+    b1 = tk.Button(root, text='grid', command=p.on_grid_change)
+    b2 = tk.Button(root, text='prop', command=p.on_propery_change)
+    b1.pack(); b2.pack()
     root.mainloop()

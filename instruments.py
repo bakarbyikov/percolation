@@ -17,9 +17,6 @@ class Instruments_panel(tk.Frame):
         self.grid = painter.grid
         self.cluster_count = None
 
-        self.line_width = LINE_WIDTH_REL
-        self.gap_size = GAP_SIZE
-
         Property_scale(self, 'Grid width', self.update_width, from_=1, to=MAX_GRID, 
                        value=self.painter.grid.width).pack()
         Property_scale(self, 'Grid height', self.update_height, from_=1, to=MAX_GRID,
@@ -29,9 +26,9 @@ class Instruments_panel(tk.Frame):
                        value=self.painter.grid.prob, step=PROBABILITY_STEP).pack()
         
         Property_scale(self, 'Line width', self.update_line_width,
-                       value=self.line_width, step=0.1).pack()
+                       value=self.painter.line_size, step=0.1).pack()
         Property_scale(self, 'Point size', self.update_gap_size,
-                       value=self.gap_size, step=0.1).pack()
+                       value=self.painter.gap_size, step=0.1).pack()
 
         buttons = ttk.Frame(self)
         buttons.pack(side=tk.BOTTOM)
@@ -49,46 +46,25 @@ class Instruments_panel(tk.Frame):
     
     def update_grid(self) -> None:
         self.grid.update()
-        self.adjust_size()
-        self.update()
+        self.painter.on_grid_change()
     
     def update_line_width(self, value: int|float) -> None:
-        self.line_width = value
-        self.update_line()
-        self.update(False)
+        self.painter.line_size = value
+        self.painter.on_propery_change()
     def update_gap_size(self, value: int|float) -> None:
-        self.gap_size = value
-        self.update_line()
-        self.update(False)
-    
-    def update_line(self) -> None:
-        self.painter.point_diameter = ceil(self.painter.line_lenght*self.gap_size)
-        self.painter.line_width = round(self.painter.point_diameter*self.line_width)
-
-    def adjust_size(self) -> None:
-        screen_width = self.painter.winfo_width()-self.painter.padding*2
-        screen_height = self.painter.winfo_height()-self.painter.padding*2
-        self.painter.line_lenght = min(max(int(screen_width / self.grid.width), 1),
-                                       max(int(screen_height / self.grid.height), 1))
-        self.update_line()
+        self.painter.gap_size = value
+        self.painter.on_propery_change()
     
     def update_width(self, new_value: int) -> None:
         self.grid.change_size(new_value, None)
-        self.adjust_size()
-        self.update()
+        self.painter.on_grid_change()
     def update_height(self, new_value: int) -> None:
         self.grid.change_size(None, new_value)
-        self.adjust_size()
-        self.update()
+        self.painter.on_grid_change()
         
     def update_probability(self, new_value: int) -> None:
         self.grid.change_probability(new_value)
-        self.update()
-    
-    def update(self, grid_changed: bool=True) -> None:
-        self.painter.update(grid_changed)
-        if self.cluster_count is not None and grid_changed:
-            self.cluster_count.update()
+        self.painter.on_grid_change()
 
 if __name__ == "__main__":
     root = tk.Tk()
