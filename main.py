@@ -12,8 +12,6 @@ class App(tk.Tk):
         self.title("Percolation - Tools")
         self.painter = Painter(self)
         self.instruments = Instruments_panel(self, self.painter)
-        self.instruments.adjust_size()
-        self.instruments.update()
         self.instruments.pack(pady=20, padx=20)
 
 if __name__ == "__main__":
