@@ -19,7 +19,6 @@ class Painter(tk.Toplevel):
         self.parent = parent
         self.geometry("x".join(map(str, WINDOW_ZISE)))
         self.title("Percolation - Grid")
-        self.protocol("WM_DELETE_WINDOW", self.parent.destroy)
         self.grid = Grid() if grid is None else grid
         self.drawer = Drawer(self.grid)
 
