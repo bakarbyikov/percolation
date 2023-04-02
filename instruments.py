@@ -1,4 +1,3 @@
-from math import ceil
 import tkinter as tk
 import tkinter.ttk as ttk
 
@@ -8,29 +7,33 @@ from settings import *
 from widgets import Property_scale
 
 
-class Instruments_panel(tk.Frame):
+class Instruments_panel(tk.Toplevel):
 
     def __init__(self, parent, painter: Painter) -> None:
         super().__init__(parent)
+        self.title("Percolation - Tools")
         self.parent = parent
         self.painter = painter
         self.grid = painter.grid
         self.cluster_count = None
 
-        Property_scale(self, 'Grid width', self.update_width, from_=1, to=MAX_GRID, 
+        frame = ttk.Frame(self)
+        frame.pack(pady=20, padx=20)
+
+        Property_scale(frame, 'Grid width', self.update_width, from_=1, to=MAX_GRID, 
                        value=self.painter.grid.width).pack()
-        Property_scale(self, 'Grid height', self.update_height, from_=1, to=MAX_GRID,
+        Property_scale(frame, 'Grid height', self.update_height, from_=1, to=MAX_GRID,
                        value=self.painter.grid.height).pack()
         
-        Property_scale(self, 'Probability', self.update_probability,
+        Property_scale(frame, 'Probability', self.update_probability,
                        value=self.painter.grid.prob, step=PROBABILITY_STEP).pack()
         
-        Property_scale(self, 'Line width', self.update_line_width,
+        Property_scale(frame, 'Line width', self.update_line_width,
                        value=self.painter.line_size, step=0.1).pack()
-        Property_scale(self, 'Point size', self.update_gap_size,
+        Property_scale(frame, 'Point size', self.update_gap_size,
                        value=self.painter.gap_size, step=0.1).pack()
 
-        buttons = ttk.Frame(self)
+        buttons = ttk.Frame(frame)
         buttons.pack(side=tk.BOTTOM)
         ttk.Button(buttons, text="Update grid", 
                   command=self.update_grid).pack(side=tk.LEFT, padx=10)
@@ -67,7 +70,8 @@ class Instruments_panel(tk.Frame):
         self.on_grid_change()
     
     def on_grid_change(self) -> None:
-        self.cluster_count.update()
+        if self.cluster_count is not None:
+            self.cluster_count.update()
         self.painter.on_grid_change()
 
 
