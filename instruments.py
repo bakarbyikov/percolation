@@ -46,7 +46,7 @@ class Instruments_panel(tk.Frame):
     
     def update_grid(self) -> None:
         self.grid.update()
-        self.painter.on_grid_change()
+        self.on_grid_change()
     
     def update_line_width(self, value: int|float) -> None:
         self.painter.line_size = value
@@ -57,14 +57,19 @@ class Instruments_panel(tk.Frame):
     
     def update_width(self, new_value: int) -> None:
         self.grid.change_size(new_value, None)
-        self.painter.on_grid_change()
+        self.on_grid_change()
     def update_height(self, new_value: int) -> None:
         self.grid.change_size(None, new_value)
-        self.painter.on_grid_change()
+        self.on_grid_change()
         
     def update_probability(self, new_value: int) -> None:
         self.grid.change_probability(new_value)
+        self.on_grid_change()
+    
+    def on_grid_change(self) -> None:
+        self.cluster_count.update()
         self.painter.on_grid_change()
+
 
 if __name__ == "__main__":
     root = tk.Tk()
