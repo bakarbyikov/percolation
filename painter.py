@@ -31,6 +31,7 @@ class Painter(tk.Toplevel):
                                 highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True)
         self.cluster_info = None
+        self.point = None
         
         self.canvas.bind('<Button-1>', self.on_left_mouse)
         self.canvas.bind('<Button-2>', self.on_middle_mouse)
@@ -67,9 +68,25 @@ class Painter(tk.Toplevel):
     def show_cluster_info(self, widget_coord: Tuple[int, int]) -> None:
         x, y = self.widget_pos_to_grid(widget_coord)
         cluster = self.grid.get_cluster_on(x, y)
+        center = self.grid_pos_to_widget(cluster.center_of_mass)
+        r = cluster.radius * self.drawer.point_diameter
+        x0, y0 = center - r
+        x1, y1 = center + r
+        if self.point is not None:
+            self.canvas.delete(self.point)
+        self.point = self.canvas.create_oval(x0, y0, x1, y1, fill="red")
+        self.canvas.update()
         if self.cluster_info is not None:
             self.cluster_info.destroy()
         self.cluster_info = Cluster_info(self, cluster)
+        
+    def grid_pos_to_widget(self, coord: Tuple[int, int]) -> Tuple[int, int]:
+        pos = np.array(coord)
+        pos *= self.drawer.line_lenght
+        pos += [self.canvas.winfo_width()//2, self.canvas.winfo_height()//2]
+        pos -= [self.drawer.width//2, self.drawer.height//2]
+        pos += self.drawer.offset_lt
+        return pos
     
     def widget_pos_to_grid(self, coord: Tuple[int, int]) -> Tuple[int, int]:
         pos = np.array(coord)
