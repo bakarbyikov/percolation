@@ -16,6 +16,9 @@ class Drawer:
         self.line_lenght = None
         self.line_width = None
         self.point_diameter = None
+        
+        self.width, self.height = None, None
+        self.size = self.width, self.height
 
         self.background = BACKGROUND_COLOR
     

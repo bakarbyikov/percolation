@@ -1,5 +1,3 @@
-from functools import partial
-from time import perf_counter
 import tkinter as tk
 from math import ceil
 from typing import Tuple
@@ -51,7 +49,6 @@ class Painter(tk.Toplevel):
         self.resizing = self.after(100, self.on_resize)
     
     def on_resize(self) -> None:
-        print("resizing")
         self.resizing = None
         self.update(grid_changed=False)
 
@@ -69,17 +66,17 @@ class Painter(tk.Toplevel):
         self.update()
 
     def show_cluster_info(self, widget_coord: Tuple[int, int]) -> None:
-        x, y = self.widget_coords_to_grid(widget_coord)
+        x, y = self.widget_pos_to_grid(widget_coord)
         cluster = self.grid.get_cluster_on(x, y)
         if self.cluster_info is not None:
             self.cluster_info.destroy()
         self.cluster_info = Cluster_info(self, cluster)
     
-    def widget_coords_to_grid(self, coord: Tuple[int, int]) -> Tuple[int, int]:
+    def widget_pos_to_grid(self, coord: Tuple[int, int]) -> Tuple[int, int]:
         pos = np.array(coord)
-        pos -= self.offset_lt
-        pos -= self.padding
-        pos = np.around(pos / self.line_lenght).astype(int)
+        pos -= [self.canvas.winfo_width()//2, self.canvas.winfo_height()//2]
+        pos += [self.drawer.width//2, self.drawer.height//2]
+        pos = np.around(pos / self.drawer.line_lenght).astype(int)
         pos = np.maximum(pos, [0, 0])
         pos = np.minimum(pos, [self.grid.width-1, self.grid.height-1])
         return tuple(pos)
