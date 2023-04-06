@@ -1,13 +1,11 @@
+from operator import attrgetter
 import tkinter as tk
-import tkinter.ttk as ttk
-from functools import partial
 from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                                NavigationToolbar2Tk)
-from perf_measurer import count_time
 from tqdm import tqdm
 
 from grid import Grid
@@ -85,10 +83,50 @@ class Sizes_plot(BasePlotter):
         X, Y, Z = self.calculate_data()
         self.axes.plot_surface(X, Y, Z)
     
+class AreaPlot(BasePlotter):
+    def __init__(self, parent):
+        super().__init__(parent, (6, 6))
+
+        self.grid = Grid(40, 40, 
+                         find_all_clusters=True, 
+                         update_on_init=False, 
+                         update_on_changes=True)
+
+        self.eps = np.linspace(0.0, 0.001, 10)
+        self.total_n_points = 100
+        self.prob_points = np.linspace(0.5-self.eps, 0.5+self.eps, 
+                                       self.total_n_points, axis=-1)
+        self.get_size = attrgetter('size')
+        self.update()
+    
+    def calculate_data(self) -> None:
+        data_max = np.full(self.prob_points.shape, 0)
+        data_mean = np.full(self.prob_points.shape, 0.0)
+
+        for index, prob in tqdm(np.ndenumerate(self.prob_points), total=len(self.eps)*self.total_n_points):
+            self.grid.change_probability(prob)
+            sizes = list(map(self.get_size, self.grid.clusters_list[1:]))
+            data_max[index] = max(sizes)
+            data_mean[index] = sum(sizes) / len(sizes)
+
+        X = self.eps
+        Y = np.mean(data_mean, axis=1)
+        print(Y)
+        return X, Y
+    
+    def create_axes(self) -> None:
+        self.axes = self.figure.add_subplot()
+    
+    def set_labels(self) -> None:
+        pass
+
+    def set_data(self) -> None:
+        X, Y = self.calculate_data()
+        self.axes.plot(X, Y)
 
 if __name__ == "__main__":
     root = tk.Tk()
-    plot = Sizes_plot(root)
+    plot = AreaPlot(root)
 
     plot.protocol("WM_DELETE_WINDOW", root.destroy)
     root.mainloop()
