@@ -6,7 +6,7 @@ from typing import Callable
 
 from instruments import Instruments_panel
 from painter import Painter
-from plotter import Sizes_plot
+from plotter import AreaPlot, Sizes_plot
 from settings import *
 
 
@@ -19,20 +19,24 @@ class App(tk.Tk):
                   font=('Helvetica', 15)).pack(pady=10, padx=10)
         buttons = ttk.Frame(self)
         buttons.pack(pady=20, padx=20)
-        open_editor = ttk.Button(buttons, text="Grid editor", 
-                                 command=partial(self.threading, self.open_editor))
-        open_editor.pack(pady=5, fill=tk.X)
+        ttk.Button(buttons, text="Grid editor", 
+                   command=partial(self.threading, self.open_editor)).pack(pady=5, fill=tk.X)
 
-        show_plots = ttk.Button(buttons, text="Big plots", 
-                                 command=partial(self.threading, self.show_plots))
-        show_plots.pack(pady=5, fill=tk.X)
+        ttk.Button(buttons, text="Big plots", 
+                   command=self.show_plots).pack(pady=5, fill=tk.X)
+
+        ttk.Button(buttons, text="Area plot", 
+                   command=self.show_area_plot).pack(pady=5, fill=tk.X)
     
     def threading(self, target: Callable[[], None]) -> None:
         t = Thread(target=target)
         t.start()
     
     def show_plots(self) -> None:
-        Sizes_plot(self)
+        self.threading(partial(Sizes_plot, self))
+
+    def show_area_plot(self) -> None:
+        self.threading(partial(AreaPlot, self))
     
     def open_editor(self) -> None:
         painter = Painter(self)
