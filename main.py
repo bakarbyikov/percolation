@@ -6,7 +6,7 @@ from typing import Callable
 
 from instruments import Instruments_panel
 from painter import Painter
-from plotter import do_graph
+from plotter import Sizes_plot
 from settings import *
 
 
@@ -32,7 +32,7 @@ class App(tk.Tk):
         t.start()
     
     def show_plots(self) -> None:
-        do_graph()
+        Sizes_plot(self)
     
     def open_editor(self) -> None:
         painter = Painter(self)
