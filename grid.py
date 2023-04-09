@@ -1,9 +1,10 @@
 from functools import cached_property, reduce
-from itertools import product
+from itertools import compress, product
 from math import pi, sqrt
 from typing import List, Set, Tuple
 
 import numpy as np
+from tqdm import tqdm
 
 from settings import *
 
@@ -111,16 +112,16 @@ class Grid:
     def find_connected(self, x: int, y: int) -> List[Tuple[int, int]]:
         connected = list()
         # Left
-        if x > 0 and self.horizontal_links[x-1, y]:
+        if self.horizontal_links[x-1, y]:
             connected.append((x-1, y))
         # Bottom
-        if y+1 < self.height and self.vertical_links[x, y]:
+        if self.vertical_links[x, y]:
             connected.append((x, y+1))
         # Top
-        if y > 0 and self.vertical_links[x, y-1]:
+        if self.vertical_links[x, y-1]:
             connected.append((x, y-1))
         # Right
-        if x+1 < self.width and self.horizontal_links[x, y]:
+        if self.horizontal_links[x, y]:
             connected.append((x+1, y))
 
         return connected
