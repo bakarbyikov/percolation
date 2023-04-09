@@ -2,6 +2,7 @@ from functools import cached_property, reduce
 from itertools import compress, product
 from math import pi, sqrt
 from typing import List, Set, Tuple
+import warnings
 
 import numpy as np
 from tqdm import tqdm
@@ -169,7 +170,6 @@ class Grid:
     @classmethod
     def from_text(cls, text: str) -> 'Grid':
         w, h = text.find('\n'), text.count('\n')+1
-        print(f"{w, h = }")
         grid = Grid(w, h, update_on_init=False)
         for y, row in enumerate(text.splitlines()):
             for x, cell in enumerate(row):
@@ -177,10 +177,18 @@ class Grid:
                     grid.horizontal_links[x, y] = True
                 if cell in ('2', '3'):
                     grid.vertical_links[x, y] = True
+        if np.any(grid.horizontal_links[-1, ...]):
+            grid.horizontal_links[-1, ...] = 0
+            warnings.warn("Nodes on right edge cant have horizontal link")
+        if np.any(grid.vertical_links[..., -1]):
+            grid.horizontal_links[..., -1] = 0
+            warnings.warn("Nodes on bottom edge cant have vertical link")
         return grid
 
 if __name__ == '__main__':
     from perf_measurer import count_time
+    grid = Grid.from_text(open("test1.txt").read())
+    grid.print()
     w, h = 1000, 1000
     grid = Grid(w, h, find_all_clusters=False, update_on_init=False)
 
