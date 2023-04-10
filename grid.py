@@ -1,11 +1,10 @@
+import warnings
 from functools import cached_property, reduce
-from itertools import compress, product
+from itertools import product
 from math import pi, sqrt
 from typing import List, Set, Tuple
-import warnings
 
 import numpy as np
-from tqdm import tqdm
 
 from settings import *
 
