@@ -16,24 +16,24 @@ class Instruments_panel(ttk.Frame):
         self.grid = painter.grid
         self.cluster_count = None
 
-        frame = ttk.Frame(self)
-        frame.pack(pady=20, padx=20)
+        scales = ttk.Frame(self)
+        scales.pack(pady=20, padx=20)
 
-        Property_scale(frame, 'Grid width', self.update_width, from_=1, to=MAX_GRID, 
+        Property_scale(scales, 'Grid width', self.update_width, from_=1, to=MAX_GRID, 
                        value=self.painter.grid.width).pack()
-        Property_scale(frame, 'Grid height', self.update_height, from_=1, to=MAX_GRID,
+        Property_scale(scales, 'Grid height', self.update_height, from_=1, to=MAX_GRID,
                        value=self.painter.grid.height).pack()
         
-        Property_scale(frame, 'Probability', self.update_probability,
+        Property_scale(scales, 'Probability', self.update_probability,
                        value=self.painter.grid.prob, step=PROBABILITY_STEP).pack()
         
-        Property_scale(frame, 'Line width', self.update_line_width,
+        Property_scale(scales, 'Line width', self.update_line_width,
                        value=self.painter.line_size, step=0.1).pack()
-        Property_scale(frame, 'Point size', self.update_gap_size,
+        Property_scale(scales, 'Point size', self.update_gap_size,
                        value=self.painter.gap_size, step=0.1).pack()
 
-        buttons = ttk.Frame(frame)
-        buttons.pack(side=tk.BOTTOM)
+        buttons = ttk.Frame(self)
+        buttons.pack(side=tk.BOTTOM, pady=20)
         ttk.Button(buttons, text="Update grid", 
                   command=self.update_grid).pack(side=tk.LEFT, padx=10)
         ttk.Button(buttons, text="Clusters size", 
