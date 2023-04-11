@@ -69,12 +69,14 @@ class Painter(tk.Toplevel):
         x, y = self.widget_pos_to_grid(widget_coord)
         cluster = self.grid.get_cluster_on(x, y)
         center = self.grid_pos_to_widget(cluster.center_of_mass)
-        r = cluster.radius * self.drawer.point_diameter
+        r = cluster.radius * self.drawer.line_lenght
         x0, y0 = center - r
         x1, y1 = center + r
         if self.point is not None:
             self.canvas.delete(self.point)
-        self.point = self.canvas.create_oval(x0, y0, x1, y1, fill="red")
+        self.point = self.canvas.create_oval(x0, y0, x1, y1, 
+                                             outline="white",
+                                             width=2)
         self.canvas.update()
         if self.cluster_info is not None:
             self.cluster_info.destroy()
