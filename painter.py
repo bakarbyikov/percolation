@@ -1,4 +1,5 @@
 import tkinter as tk
+import tkinter.ttk as ttk
 from math import ceil
 from typing import Tuple
 
@@ -12,13 +13,11 @@ from misc import color_from_rgb
 from settings import *
 
 
-class Painter(tk.Toplevel):
+class Painter(ttk.Frame):
 
     def __init__(self, parent, grid: Grid=None) -> None:
         super().__init__(parent)
         self.parent = parent
-        self.geometry("x".join(map(str, WINDOW_ZISE)))
-        self.title("Percolation - Grid")
         self.grid = Grid() if grid is None else grid
         self.drawer = Drawer(self.grid)
 
