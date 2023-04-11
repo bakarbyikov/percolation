@@ -1,13 +1,11 @@
 import tkinter as tk
 import tkinter.ttk as ttk
-from functools import partial
-from threading import Thread
-from typing import Callable
 
 from instruments import Instruments_panel
 from painter import Painter
 from plotter import AreaPlot, Sizes_plot
 from settings import *
+from visualization import Visualization
 
 
 class App(tk.Tk):
@@ -15,33 +13,23 @@ class App(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("Percolation")
-        ttk.Label(self, text="Percolation simulator", 
-                  font=('Helvetica', 15)).pack(pady=10, padx=10)
-        buttons = ttk.Frame(self)
-        buttons.pack(pady=20, padx=20)
-        ttk.Button(buttons, text="Grid editor", 
-                   command=partial(self.threading, self.open_editor)).pack(pady=5, fill=tk.X)
+        self.geometry("{0}x{1}".format(*WINDOW_ZISE))
+        notebook = ttk.Notebook(self)
+        notebook.pack(expand=True, fill=tk.BOTH)
 
-        ttk.Button(buttons, text="Big plots", 
-                   command=self.show_plots).pack(pady=5, fill=tk.X)
+        painter = Visualization(self)
+        painter.pack(fill=tk.BOTH, expand=True)
 
-        ttk.Button(buttons, text="Area plot", 
-                   command=self.show_area_plot).pack(pady=5, fill=tk.X)
-    
-    def threading(self, target: Callable[[], None]) -> None:
-        t = Thread(target=target)
-        t.start()
-    
-    def show_plots(self) -> None:
-        self.threading(partial(Sizes_plot, self))
+        size_plot = Sizes_plot(notebook)
+        size_plot.pack(fill=tk.BOTH, expand=True)
+        
+        area_plot = AreaPlot(notebook)
+        area_plot.pack(fill=tk.BOTH, expand=True)
 
-    def show_area_plot(self) -> None:
-        self.threading(partial(AreaPlot, self))
-    
-    def open_editor(self) -> None:
-        painter = Painter(self)
-        tools = Instruments_panel(painter, painter)
-        tools.protocol("WM_DELETE_WINDOW", painter.destroy)
+        notebook.add(painter, text="Visualizer")
+        notebook.add(size_plot, text="Size plot")
+        notebook.add(area_plot, text="Area plot")
+        
 
 if __name__ == "__main__":
     App().mainloop()

@@ -7,11 +7,10 @@ from settings import *
 from widgets import Property_scale
 
 
-class Instruments_panel(tk.Toplevel):
+class Instruments_panel(ttk.Frame):
 
     def __init__(self, parent, painter: Painter) -> None:
         super().__init__(parent)
-        self.title("Percolation - Tools")
         self.parent = parent
         self.painter = painter
         self.grid = painter.grid

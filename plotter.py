@@ -1,5 +1,6 @@
 from operator import attrgetter
 import tkinter as tk
+import tkinter.ttk as ttk
 from typing import Tuple
 
 import matplotlib.pyplot as plt
@@ -10,7 +11,7 @@ from tqdm import tqdm
 
 from grid import Grid
 
-class BasePlotter(tk.Toplevel):
+class BasePlotter(ttk.Frame):
     def __init__(self, parent, size: Tuple[int, int]=(6, 3)) -> None:
         super().__init__(parent)
         self.parent = parent
@@ -53,7 +54,7 @@ class Sizes_plot(BasePlotter):
         self.n_tests = self.n_tests / np.sum(self.n_tests) * self.total_n_points + 1
         self.n_tests = self.n_tests.astype(int)
 
-        self.update()
+        # self.update()
     
     def calculate_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         data = np.full((*self.prob_points.shape, *self.sizes.shape, 10**4), 
@@ -97,7 +98,7 @@ class AreaPlot(BasePlotter):
         self.prob_points = np.linspace(0.5-self.eps, 0.5+self.eps, 
                                        self.total_n_points, axis=-1)
         self.get_size = attrgetter('size')
-        self.update()
+        # self.update()
     
     def calculate_data(self) -> None:
         data_max = np.full(self.prob_points.shape, 0)
