@@ -15,7 +15,7 @@ pink = (255, 192, 203)
 white = (255, 255, 255)
 
 #Painter default settings
-WINDOW_ZISE = 1100, 800
+WINDOW_ZISE = 800, 500
 LINE_SIZE = 1
 GAP_SIZE = 0.5
 PADDING = 10
