@@ -97,6 +97,46 @@ class Sizes_plot(BasePlotter):
         X, Y, Z = self.data
         self.axes.plot_surface(X, Y, Z)
     
+
+class Cluster_sizes(BasePlotter):
+    def __init__(self, parent) -> None:
+        super().__init__(parent, (6, 6))
+        self.grid = Grid(find_all_clusters=True, 
+                         update_on_init=False, 
+                         update_on_changes=False)
+    
+    def calculate_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        data = np.full(self.grid.width*self.grid.height, int())
+
+        n_grids = 10**5
+        for _ in tqdm(range(n_grids)):
+            self.grid.update()
+            for c in self.grid.clusters_list[1:]:
+                data[c.size] += 1
+                    
+        X = np.arange(1, data.shape[0])
+        Y = data[1:] / n_grids
+        self.data = X, Y
+    
+    def create_axes(self) -> None:
+        self.axes = self.figure.add_subplot()
+    
+    def set_labels(self) -> None:
+        self.axes.set_xlabel("Размер кластера")
+        self.axes.set_ylabel("Среднее количество")
+    
+    def set_data(self) -> None:
+        X, Y = self.data
+        self.axes.plot(X, Y)
+
+
+class Cluster_sizes_log(Cluster_sizes):
+    
+    def create_axes(self) -> None:
+        self.axes = self.figure.add_subplot()
+        self.axes.set_xscale('log')
+        self.axes.set_yscale('log')
+
 class AreaPlot(BasePlotter):
     def __init__(self, parent):
         super().__init__(parent, (6, 6))
@@ -178,9 +218,10 @@ class AreaPlot2(BasePlotter):
 
 if __name__ == "__main__":
     root = tk.Tk()
-    plot = AreaPlot(root)
+    plot = Cluster_sizes_log(root)
+    plot.pack(fill=tk.BOTH, expand=True)
     plot.calculate_data()
+    plot.save("Clusters_size_plot")
     plot.update()
 
-    plot.protocol("WM_DELETE_WINDOW", root.destroy)
     root.mainloop()
