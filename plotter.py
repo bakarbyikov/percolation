@@ -217,13 +217,61 @@ class AreaPlot2(BasePlotter):
     def set_data(self) -> None:
         X, Y = self.data
         self.axes.plot(X, Y)
+ 
+class Average_size(BasePlotter):
+    def __init__(self, parent):
+        super().__init__(parent, (6, 6))
+        self.grid = Grid(40, 40, 
+                         find_all_clusters=True, 
+                         update_on_init=False, 
+                         update_on_changes=False)
+        
+        self.n_grids = 10**3
+        self.prob_points = np.linspace(0, 1, 101)
+    
+    def distribution_for_prob(self, prob: float):
+        self.grid.change_probability(prob)
+        distribution = np.zeros(self.grid.width*self.grid.height+1)
+        
+        count = 0
+        for _ in range(self.n_grids):
+            self.grid.update()
+            count += len(self.grid.clusters_list)-1
+            for c in self.grid.clusters_list[1:]:
+                distribution[c.size] += 1
+        distribution /= self.grid.width*self.grid.height * self.n_grids
+        return distribution
+    
+    def calculate_data(self) -> None:
+        sizes_squere = np.arange(self.grid.width*self.grid.height+1)**2
+        data = np.empty(self.prob_points.shape)
+
+        for i, prob in enumerate(tqdm(self.prob_points)):
+            distribution = self.distribution_for_prob(prob)
+            data[i] = np.sum(sizes_squere * distribution)
+                    
+        X = self.prob_points
+        Y = data
+        self.data = X, Y
+    
+    def create_axes(self) -> None:
+        self.axes = self.figure.add_subplot()
+    
+    def set_labels(self) -> None:
+        self.axes.set_xlabel("Вероятность связи")
+        self.axes.set_ylabel("Средний размер кластера")
+
+    def set_data(self) -> None:
+        X, Y = self.data
+        self.axes.plot(X, Y)
+
 
 if __name__ == "__main__":
     root = tk.Tk()
-    plot = Cluster_sizes_log(root)
+    plot = Average_size(root)
     plot.pack(fill=tk.BOTH, expand=True)
     plot.calculate_data()
-    plot.save("plots/Clusters_size_plot")
+    plot.save("Average_size_plot")
     plot.update()
 
     root.mainloop()
