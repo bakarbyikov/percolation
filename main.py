@@ -33,10 +33,12 @@ class App(tk.Tk):
         t.start()
     
     def show_plots(self) -> None:
-        self.threading(partial(Sizes_plot, self))
+        plt = Sizes_plot(self)
+        plt.open("plots/Sizes_plot.npy")
 
     def show_area_plot(self) -> None:
-        self.threading(partial(AreaPlot, self))
+        plt = AreaPlot(self)
+        plt.open("plots/Area_plot.npy")
     
     def open_editor(self) -> None:
         painter = Painter(self)
