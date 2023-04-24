@@ -20,6 +20,18 @@ class BasePlotter(ttk.Frame):
         figure_canvas = FigureCanvasTkAgg(self.figure, self)
         NavigationToolbar2Tk(figure_canvas, self)
         figure_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        self.data = None
+    
+    def calculate_data():
+        raise NotImplementedError
+
+    def save(self, file):
+        np.save(file, self.data)
+        
+    def open(self, file):
+        self.data = np.load(file)
+        self.update()
         
     def update(self) -> None:
         self.figure.clear()
@@ -40,7 +52,9 @@ class BasePlotter(ttk.Frame):
 class Sizes_plot(BasePlotter):
     def __init__(self, parent) -> None:
         super().__init__(parent, (6, 6))
-        self.grid = Grid(find_all_clusters=False, update_on_init=False, update_on_changes=False)
+        self.grid = Grid(find_all_clusters=False, 
+                         update_on_init=False, 
+                         update_on_changes=False)
 
         #Размеры сетки
         self.sizes = np.arange(10, 40)
@@ -54,7 +68,6 @@ class Sizes_plot(BasePlotter):
         self.n_tests = self.n_tests / np.sum(self.n_tests) * self.total_n_points + 1
         self.n_tests = self.n_tests.astype(int)
 
-        # self.update()
     
     def calculate_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         data = np.full((*self.prob_points.shape, *self.sizes.shape, 10**4), 
@@ -70,7 +83,7 @@ class Sizes_plot(BasePlotter):
                     
         X, Y = np.meshgrid(self.sizes, self.prob_points)
         Z = np.nanmean(data, axis=2)
-        return X, Y, Z
+        self.data = X, Y, Z
     
     def create_axes(self) -> None:
         self.axes = self.figure.add_subplot(projection='3d')
@@ -81,7 +94,7 @@ class Sizes_plot(BasePlotter):
         self.axes.set_zlabel("Шанс Протечки")
     
     def set_data(self) -> None:
-        X, Y, Z = self.calculate_data()
+        X, Y, Z = self.data
         self.axes.plot_surface(X, Y, Z)
     
 class AreaPlot(BasePlotter):
@@ -94,11 +107,10 @@ class AreaPlot(BasePlotter):
                          update_on_changes=True)
 
         self.eps = np.linspace(0.0, 0.001, 10)
-        self.total_n_points = 10000
+        self.total_n_points = 100
         self.prob_points = np.linspace(0.5-self.eps, 0.5+self.eps, 
                                        self.total_n_points, axis=-1)
         self.get_size = attrgetter('size')
-        # self.update()
     
     def calculate_data(self) -> None:
         data_max = np.full(self.prob_points.shape, 0)
@@ -112,8 +124,7 @@ class AreaPlot(BasePlotter):
 
         X = self.eps
         Y = np.mean(data_mean, axis=1)
-        print(Y)
-        return X, Y
+        self.data = X, Y
     
     def create_axes(self) -> None:
         self.axes = self.figure.add_subplot()
@@ -123,13 +134,12 @@ class AreaPlot(BasePlotter):
         self.axes.set_ylabel("Средняя площадь кластера")
 
     def set_data(self) -> None:
-        X, Y = self.calculate_data()
+        X, Y = self.data
         self.axes.plot(X, Y)
         
 class AreaPlot2(BasePlotter):
     def __init__(self, parent):
         super().__init__(parent, (6, 6))
-
         self.grid = Grid(40, 40, 
                          find_all_clusters=True, 
                          update_on_init=False, 
@@ -139,7 +149,6 @@ class AreaPlot2(BasePlotter):
         self.total_n_points = 10**5
         self.prob_points = np.linspace(0.5-self.eps, 0.5+self.eps, 10)
         self.get_size = attrgetter('size')
-        self.update()
     
     def calculate_data(self) -> None:
         data_max = np.full((*self.prob_points.shape, self.total_n_points), 0)
@@ -154,9 +163,7 @@ class AreaPlot2(BasePlotter):
 
         X = self.prob_points
         Y = np.mean(data_mean, axis=-1)
-        print(X)
-        print(Y)
-        return X, Y
+        self.data = X, Y
     
     def create_axes(self) -> None:
         self.axes = self.figure.add_subplot()
@@ -166,12 +173,14 @@ class AreaPlot2(BasePlotter):
         self.axes.set_ylabel("Средняя площадь кластера")
 
     def set_data(self) -> None:
-        X, Y = self.calculate_data()
+        X, Y = self.data
         self.axes.plot(X, Y)
 
 if __name__ == "__main__":
     root = tk.Tk()
     plot = AreaPlot(root)
+    plot.calculate_data()
+    plot.update()
 
     plot.protocol("WM_DELETE_WINDOW", root.destroy)
     root.mainloop()

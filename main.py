@@ -21,6 +21,7 @@ class App(tk.Tk):
         painter.pack(fill=tk.BOTH, expand=True)
 
         size_plot = Sizes_plot(notebook)
+        size_plot.open("plots/Sizes_plot.npy")
         size_plot.pack(fill=tk.BOTH, expand=True)
         
         area_plot = AreaPlot(notebook)
