@@ -109,13 +109,15 @@ class Cluster_sizes(BasePlotter):
         data = np.full(self.grid.width*self.grid.height, int())
 
         n_grids = 10**5
+        count = 0
         for _ in tqdm(range(n_grids)):
             self.grid.update()
+            count += len(self.grid.clusters_list)-1
             for c in self.grid.clusters_list[1:]:
                 data[c.size] += 1
                     
         X = np.arange(1, data.shape[0])
-        Y = data[1:] / n_grids
+        Y = data[1:] / count
         self.data = X, Y
     
     def create_axes(self) -> None:
@@ -123,7 +125,7 @@ class Cluster_sizes(BasePlotter):
     
     def set_labels(self) -> None:
         self.axes.set_xlabel("Размер кластера")
-        self.axes.set_ylabel("Среднее количество")
+        self.axes.set_ylabel("Шанс появления")
     
     def set_data(self) -> None:
         X, Y = self.data
@@ -221,7 +223,7 @@ if __name__ == "__main__":
     plot = Cluster_sizes_log(root)
     plot.pack(fill=tk.BOTH, expand=True)
     plot.calculate_data()
-    plot.save("Clusters_size_plot")
+    plot.save("plots/Clusters_size_plot")
     plot.update()
 
     root.mainloop()
