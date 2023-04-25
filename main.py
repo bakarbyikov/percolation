@@ -3,7 +3,7 @@ import tkinter.ttk as ttk
 
 from instruments import Instruments_panel
 from painter import Painter
-from plotter import AreaPlot, Average_size, Sizes_plot, Cluster_sizes, Cluster_sizes_log
+from plotter import AreaPlot, Average_size, Distr_per_prob, Sizes_plot, Cluster_sizes, Cluster_sizes_log
 from settings import *
 from visualization import Visualization
 
@@ -45,6 +45,11 @@ class App(tk.Tk):
         average_size_small.open("plots/Average_size_small_plot.npy")
         average_size_small.pack(fill=tk.BOTH, expand=True)
         notebook.add(average_size_small, text="Average size small")
+        
+        distr_per_prob = Distr_per_prob(notebook)
+        distr_per_prob.open("plots/Distr_per_prob_plot.npy")
+        distr_per_prob.pack(fill=tk.BOTH, expand=True)
+        notebook.add(distr_per_prob, text="Cluster size per prob")
         
 
 if __name__ == "__main__":

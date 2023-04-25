@@ -1,15 +1,17 @@
-from operator import attrgetter
 import tkinter as tk
 import tkinter.ttk as ttk
+from operator import attrgetter
 from typing import Tuple
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import numpy as np
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                                NavigationToolbar2Tk)
 from tqdm import tqdm
 
 from grid import Grid
+
 
 class BasePlotter(ttk.Frame):
     def __init__(self, parent, size: Tuple[int, int]=(6, 3)) -> None:
@@ -265,13 +267,66 @@ class Average_size(BasePlotter):
         X, Y = self.data
         self.axes.plot(X, Y)
 
+class Distr_per_prob(BasePlotter):
+    def __init__(self, parent) -> None:
+        super().__init__(parent, (6, 6))
+        self.grid = Grid(5, 5, 
+                         find_all_clusters=True,
+                         update_on_init=False,
+                         update_on_changes=False)
+
+        #Вероятность связи
+        self.prob_points = np.linspace(0, 1, 21)
+        #Количество тестов на каждую сетку
+        self.n_grids = 10**5
+       
+    def distribution_for_prob(self, prob: float):
+        self.grid.change_probability(prob)
+        distribution = np.zeros(self.grid.width*self.grid.height+1)
+       
+        count = 0
+        for _ in range(self.n_grids):
+            self.grid.update()
+            count += len(self.grid.clusters_list)-1
+            for c in self.grid.clusters_list[1:]:
+                distribution[c.size] += 1
+        distribution /= self.grid.width*self.grid.height * self.n_grids
+        return distribution[1:]
+   
+    def calculate_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        data = list()
+        for prob in tqdm(self.prob_points):
+            data.append(self.distribution_for_prob(prob))
+                   
+                   
+        Z = np.stack(data, axis=0)
+        X, Y = np.meshgrid(np.arange(data[0].shape[0]), self.prob_points)
+        self.data = X, Y, Z
+   
+    def create_axes(self) -> None:
+        self.axes = self.figure.add_subplot(projection='3d')
+        
+    def log_tick_formatter(val, pos=None):
+        return f"$10^{{{int(val)}}}$"
+   
+    def set_labels(self) -> None:
+        self.axes.set_xlabel("Размер кластера")
+        self.axes.set_ylabel("Вероятность связи")
+        self.axes.set_zlabel("Шанс появления (log10)")
+   
+    def set_data(self) -> None:
+        X, Y, Z = self.data
+        Z[Z == 0] = np.nan
+        Z = np.log10(Z)
+        self.axes.plot_surface(X, Y, Z)
+
 
 if __name__ == "__main__":
     root = tk.Tk()
-    plot = Average_size(root)
+    plot = Distr_per_prob(root)
     plot.pack(fill=tk.BOTH, expand=True)
     plot.calculate_data()
-    plot.save("Average_size_plot")
+    plot.save("Distr_per_prob_plot")
     plot.update()
 
     root.mainloop()
